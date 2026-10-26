@@ -6,6 +6,7 @@
     "doc": "docs"
   },
   "scripts": {
+    "pretest": "npm run -s build:plugin",
     "test": "vitest run",
     "coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",

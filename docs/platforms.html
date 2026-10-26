@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>多平台安装与使用</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/concept.css">
+<style>
+.pad { padding: 20px; }
+.scroll-x { overflow-x: auto; }
+.scroll-x svg { min-width: 760px; }
+.wide-svg { width: 100%; height: auto; display: block; }
+.platforms { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+.platform { padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+.platform h3 { margin: 0; font-size: 1.2rem; }
+.platform .how { font-size: .84rem; color: var(--ink-2); margin: 0; }
+.platform code { display: block; font: 500 .76rem var(--font-mono); background: var(--paper-2); border-radius: 6px; padding: 7px 10px; overflow-wrap: anywhere; }
+.platform .tag { align-self: flex-start; font: 700 .72rem var(--font-mono); padding: 2px 9px; border-radius: 999px; color: var(--card); }
+.platform ul { margin: 0; padding-left: 1.1em; font-size: .82rem; color: var(--ink-2); display: grid; gap: 4px; }
+@media (max-width: 900px) { .platforms { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main>
+
+<header class="hero">
+  <div>
+    <div class="eyebrow">ai-pm · Platforms</div>
+    <h1>一个 <em>pm</em>，<br>四个代理平台</h1>
+    <p class="lead">核心是同一个命令行工具。Claude Code 与 Codex 直接装插件；OpenCode 与 DeepSeek Harness 用 <span class="mono">pm setup</span> 一条命令接入。功能层验收在所有平台上都只能由你在终端里按 y 锁定。</p>
+  </div>
+  <figure class="hero-chart" style="margin:0"><svg id="hub-svg" class="wide-svg" viewBox="0 0 520 330" role="img" aria-label="pm 核心与四个平台的接入方式"></svg></figure>
+</header>
+
+<section aria-labelledby="s1">
+  <div class="sec-head">
+    <span class="sec-num">01</span><h2 id="s1">能力矩阵</h2>
+    <p class="sub">实心为完整支持，半色为部分支持（由 AI 按指令执行），空心为暂不支持。最后一行是我实际验证到的程度。</p>
+  </div>
+  <div class="card pad scroll-x"><svg id="matrix-svg" class="wide-svg" viewBox="0 0 1000 400" role="img" aria-label="四个平台的能力矩阵"></svg></div>
+</section>
+
+<section aria-labelledby="s2">
+  <div class="sec-head">
+    <span class="sec-num">02</span><h2 id="s2">安装与使用</h2>
+    <p class="sub">OpenCode 与 DeepSeek Harness 需要先在本机构建一次：<span class="mono">git clone … ~/ai-pm && cd ~/ai-pm && npm install && npm run build:plugin</span>。下文 PM = <span class="mono">node ~/ai-pm/plugin/bin/pm.mjs</span>。</p>
+  </div>
+  <div class="platforms" id="platforms"></div>
+</section>
+
+<section aria-labelledby="s3">
+  <div class="sec-head">
+    <span class="sec-num">03</span><h2 id="s3">OpenCode 插件做了什么</h2>
+    <p class="sub">OpenCode 不能加载 Claude Code 的钩子，pm setup 生成的 JS 插件把它的事件翻译成同样的 pm hook 调用。</p>
+  </div>
+  <div class="card pad scroll-x"><svg id="oc-svg" class="wide-svg" viewBox="0 0 1000 300" role="img" aria-label="OpenCode 事件到 pm hook 的映射"></svg></div>
+</section>
+
+<section aria-labelledby="s4">
+  <div class="sec-head">
+    <span class="sec-num">04</span><h2 id="s4">谁来做：人 · AI · 自动</h2>
+    <p class="sub">自动化越完整，你需要操心的越少；但"什么算完成"始终由你在终端里拍板。</p>
+  </div>
+  <div class="card pad scroll-x"><svg id="auto-svg" class="wide-svg" viewBox="0 0 1000 260" role="img" aria-label="各平台人、AI、自动的分工"></svg></div>
+</section>
+
+<footer>文字版见 platforms.md · 总览见 <a href="index.html">文档首页</a></footer>
+</main>
+
+<script src="assets/pm-core.js"></script>
+<script src="assets/platforms.js"></script>
+<script>
+  (window.PM_RENDERERS || []).forEach((render) => {
+    try { render(); } catch (err) {
+      const note = document.createElement("p");
+      note.className = "callout";
+      note.textContent = `页面渲染出错（${render.name}）：${err.message}`;
+      document.querySelector("main").prepend(note);
+      console.error(err);
+    }
+  });
+</script>
+</body>
+</html>

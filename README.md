@@ -14,6 +14,7 @@
 - [核心理念](#核心理念)
 - [五个视图](#五个视图)
 - [快速开始](#快速开始)
+- [支持的代理平台](#支持的代理平台)
 - [在项目里怎么用](#在项目里怎么用)
 - [pm.yaml 格式](#pmyaml-格式)
 - [命令参考](#命令参考)
@@ -118,6 +119,17 @@ npm run demo:dashboard
 node /path/to/ai-projects-management/plugin/bin/pm.mjs init --project "我的项目"
 ```
 
+## 支持的代理平台
+
+| 平台 | 安装方式 | 自动化程度 |
+|---|---|---|
+| Claude Code | `claude plugin install ai-pm@ai-pm-local` | 技能 + 三个钩子：注入、记 token、后台验收 |
+| Codex | `codex plugin add ai-pm@ai-pm-local`（Codex 直接兼容 Claude Code 插件格式） | 同上；首次需在 `/hooks` 里信任钩子 |
+| OpenCode | `pm setup opencode`（生成 JS 插件与技能） | 技能 + 插件：注入、记 token；删除会话时验收 |
+| DeepSeek Harness | `pm setup deepseek`（技能 + AGENTS.md 说明） | 技能 + 指令：由 AI 在开始和结束时运行 `pm`；token 暂不自动记录 |
+
+各平台的详细安装步骤、使用方法、验证程度和故障排查见 [docs/platforms.md](docs/platforms.md)（图形版 [docs/platforms.html](docs/platforms.html)）。
+
 ## 在项目里怎么用
 
 ![一次会话里，人、AI 与钩子各做什么](docs/images/lifecycle.svg)
@@ -214,7 +226,8 @@ goals:
 | `pm record --session <id> --transcript <文件>` | 把会话的 token 增量记到当前模块 |
 | `pm dashboard [--out 文件] [--now 时间]` | 生成项目地图页面 |
 | `pm context` | 输出给 AI 的项目摘要 |
-| `pm hook <session-start\|stop\|session-end>` | Claude Code 钩子入口，从 stdin 读取 |
+| `pm hook <session-start\|stop\|session-end>` | 代理平台的钩子入口，从 stdin 读取 |
+| `pm setup <opencode\|deepseek> [--global]` | 接入 OpenCode / DeepSeek Harness |
 
 退出码：`0` 成功，`1` 输入有误，`2` 用法错误。钩子在任何情况下都返回 `0`，不会打断会话。
 
@@ -282,7 +295,7 @@ npm run build:plugin
 
 | 脚本 | 作用 |
 |---|---|
-| `npm test` / `npm run coverage` | 运行测试（129 个，门槛 80%，当前行覆盖率约 95%） |
+| `npm test` / `npm run coverage` | 运行测试（139 个，门槛 80%，当前行覆盖率约 95%）；`npm test` 会先自动构建插件 |
 | `npm run typecheck` | 类型检查（strict 模式，开启 `noUncheckedIndexedAccess`） |
 | `npm run pm -- <命令>` | 从源码运行命令行 |
 | `npm run demo:dashboard` | 用示例项目生成页面 |
@@ -304,10 +317,10 @@ src/
   blueprint.ts         旅程蓝图推导
   analyze.ts           一次算出五个视图的数据
   cli.ts               命令行入口与分发
-  commands/            init / start / lock / trust / verify / record / dashboard / context / hook
+  commands/            init / start / lock / trust / verify / record / dashboard / context / hook / setup
   workflow/            锁定指纹、测试运行器、会话记录解析
   dashboard/           页面渲染器与浏览器端脚本
-plugin/                Claude Code 插件（Skill、钩子、打包好的命令行）
+plugin/                插件（Skill、钩子、打包好的命令行、OpenCode 插件模板）
 tests/                 单元测试、命令测试、无头 DOM 冒烟测试
 examples/kb-demo/      示例项目
 docs/                  设计文档（每份 MD 都有配套的图形化 HTML）
@@ -329,6 +342,7 @@ docs/                  设计文档（每份 MD 都有配套的图形化 HTML）
 | [docs/p0-engine.md](docs/p0-engine.md) · [html](docs/p0-engine.html) | P0：pm.yaml 格式与计算引擎 |
 | [docs/p1-dashboard.md](docs/p1-dashboard.md) · [html](docs/p1-dashboard.html) | P1：单文件项目地图页面 |
 | [docs/p2-skill.md](docs/p2-skill.md) · [html](docs/p2-skill.html) | P2：Claude Code 插件（Skill + 钩子） |
+| [docs/platforms.md](docs/platforms.md) · [html](docs/platforms.html) | 在 Claude Code、Codex、OpenCode、DeepSeek Harness 上安装与使用 |
 
 HTML 文档依赖 `docs/assets/` 下的脚本，需要整个 `docs/` 目录放在一起；用浏览器直接打开，或用任意静态服务器打开 `docs/`。
 
@@ -352,4 +366,5 @@ HTML 文档依赖 `docs/assets/` 下的脚本，需要整个 `docs/` 目录放�
 - 验收结果按文件计数，一个测试文件算一条，不解析测试框架内部的用例数。
 - 地图使用固定的分层排版，依赖一多连线会交叉。
 - 只支持 macOS / Linux，Windows 尚未测试。
+- Codex、OpenCode、DeepSeek Harness 的接入还没有在真实会话里跑过，验证程度见 [docs/platforms.md](docs/platforms.md)。
 - 尚未选择开源许可证。
