@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 320" width="960" height="320" font-family="PingFang SC, Hiragino Sans GB, Noto Sans SC, Microsoft YaHei, sans-serif">
+  <title>一次会话里，人、AI 与钩子各做什么</title>
+  <defs><marker id="a" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#8a94a1"/></marker></defs>
+  <rect width="960" height="320" rx="20" fill="#f4f1ea"/>
+  <rect x="10" y="22" width="940" height="80" rx="10" fill="#ebe6db" opacity=".7"/>
+  <rect x="10" y="122" width="940" height="80" rx="10" fill="#fffdf8" opacity=".7"/>
+  <rect x="10" y="222" width="940" height="80" rx="10" fill="#ebe6db" opacity=".7"/>
+  <g font-size="15" font-weight="900" fill="#8a94a1"><text x="26" y="67">人</text><text x="26" y="167">AI</text><text x="26" y="267">钩子</text></g>
+
+  <g fill="none" stroke="#8a94a1" stroke-width="1.6" marker-end="url(#a)">
+    <path d="M150,262 C175,262 165,162 188,162"/>
+    <path d="M276,162 L298,162"/>
+    <path d="M386,162 C410,162 400,62 424,62"/>
+    <path d="M512,62 C536,62 526,162 550,162"/>
+    <path d="M638,162 C662,162 652,62 676,62"/>
+    <path d="M764,62 C788,62 778,162 802,162"/>
+  </g>
+  <path d="M846,186 L846,236" fill="none" stroke="#8a94a1" stroke-width="1.6" marker-end="url(#a)"/>
+
+  <g font-size="12" text-anchor="middle">
+    <g transform="translate(62,238)"><rect width="88" height="48" rx="10" fill="#fffdf8" stroke="#3866d6" stroke-width="2"/><text x="44" y="21" font-weight="900" fill="#18222f">会话开始</text><text x="44" y="38" font-size="10" fill="#4a5666">注入下一步</text></g>
+    <g transform="translate(188,138)"><rect width="88" height="48" rx="10" fill="#fffdf8" stroke="#18222f" stroke-width="2"/><text x="44" y="21" font-weight="900" fill="#18222f">pm start</text><text x="44" y="38" font-size="10" fill="#4a5666">声明模块</text></g>
+    <g transform="translate(298,138)"><rect width="88" height="48" rx="10" fill="#fffdf8" stroke="#18222f" stroke-width="2"/><text x="44" y="21" font-weight="900" fill="#18222f">起草条目</text><text x="44" y="38" font-size="10" fill="#4a5666">.feature</text></g>
+    <g transform="translate(424,38)"><rect width="88" height="48" rx="10" fill="#fffdf8" stroke="#17936b" stroke-width="2"/><text x="44" y="21" font-weight="900" fill="#18222f">逐条确认</text><text x="44" y="38" font-size="10" fill="#4a5666">在聊天里</text></g>
+    <g transform="translate(550,138)"><rect width="88" height="48" rx="10" fill="#fffdf8" stroke="#d4443b" stroke-width="2"/><text x="44" y="21" font-weight="900" fill="#18222f">测试先失败</text><text x="44" y="38" font-size="10" fill="#4a5666">pm verify</text></g>
+    <g transform="translate(676,38)"><rect width="88" height="48" rx="10" fill="#18222f"/><text x="44" y="21" font-weight="900" fill="#fffdf8">终端按 y</text><text x="44" y="38" font-size="10" fill="#fffdf8">pm lock</text></g>
+    <g transform="translate(802,138)"><rect width="88" height="48" rx="10" fill="#fffdf8" stroke="#17936b" stroke-width="2"/><text x="44" y="21" font-weight="900" fill="#18222f">实现到通过</text><text x="44" y="38" font-size="10" fill="#4a5666">pm verify</text></g>
+    <g transform="translate(756,238)"><rect width="180" height="48" rx="10" fill="#fffdf8" stroke="#3866d6" stroke-width="2"/><text x="90" y="21" font-weight="900" fill="#18222f">每轮结束 · 会话结束</text><text x="90" y="38" font-size="10" fill="#4a5666">记 token · 后台验收 · 刷新地图</text></g>
+  </g>
+</svg>

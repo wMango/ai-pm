@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ai-pm 文档首页</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/concept.css">
+<style>
+.figure { padding: 14px; }
+.figure img { width: 100%; height: auto; display: block; border-radius: 12px; }
+.docs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.doc { padding: 20px; display: flex; flex-direction: column; gap: 10px; text-decoration: none; color: inherit; transition: transform .25s var(--ease), box-shadow .25s var(--ease); }
+.doc:hover, .doc:focus-visible { transform: translateY(-3px); outline: none; box-shadow: 0 1px 0 rgba(24,34,47,.06), 0 18px 36px -18px rgba(24,34,47,.5); }
+.doc h3 { margin: 0; font-size: 1.1rem; }
+.doc p { margin: 0; color: var(--ink-2); font-size: .86rem; }
+.doc .links { display: flex; gap: 8px; font: 500 .78rem var(--font-mono); color: var(--doing); }
+.badge { display: inline-block; font: 700 .72rem var(--font-mono); padding: 2px 8px; border-radius: 999px; background: var(--ink); color: var(--card); align-self: flex-start; }
+.badge.done { background: var(--ok); }
+.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.steps .card { padding: 18px; display: flex; flex-direction: column; gap: 8px; }
+.steps code { font: 500 .78rem var(--font-mono); background: var(--paper-2); border-radius: 6px; padding: 8px 10px; overflow-wrap: anywhere; }
+.step-no { font: 900 1.6rem var(--font-mono); color: var(--ink-3); }
+.road { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; position: relative; padding: 26px 18px 22px; }
+@media (max-width: 900px) { .docs, .steps { grid-template-columns: 1fr; } .road { grid-template-columns: 1fr 1fr; row-gap: 22px; } }
+</style>
+</head>
+<body>
+<main>
+
+<header class="hero">
+  <div>
+    <div class="eyebrow">ai-pm · Documentation</div>
+    <h1>用图管理<br>被 AI <em>放大</em>的项目</h1>
+    <p class="lead">架构图代替任务列表，验收测试代替"做没做"，从目标倒推下一步。这里是全部设计与实现文档的入口。</p>
+  </div>
+  <figure class="card figure" style="margin:0"><img src="images/views.svg" width="960" height="250" alt="项目地图的五个视图：架构地图、依赖与阻塞、目标与下一步、成本、旅程蓝图"></figure>
+</header>
+
+<section aria-labelledby="h1">
+  <div class="sec-head">
+    <span class="sec-num">01</span><h2 id="h1">做了 ≠ 生效</h2>
+    <p class="sub">三个输入经过计算引擎，得到建成度与生效度。两者之差，就是写好了却被上游卡住的部分，传统看板看不见它。</p>
+  </div>
+  <figure class="card figure" style="margin:0"><img src="images/overview.svg" width="960" height="380" alt="三个输入（pm.yaml、验收测试结果、token 流水）经过计算引擎，得到建成度 52% 与生效度 39%"></figure>
+</section>
+
+<section aria-labelledby="h2">
+  <div class="sec-head">
+    <span class="sec-num">02</span><h2 id="h2">文档</h2>
+    <p class="sub">每份文档都有文字版（MD）和图形版（HTML），点击卡片打开图形版。</p>
+  </div>
+  <div class="docs">
+    <a class="card doc" href="concept.html"><span class="badge">方法论</span><h3>概念设计</h3><p>四种状态、五个视图、7 项设计决策：粒度、看成果不看成本、三套架构、跨视图传播、验收测试分工、成本、旅程蓝图。</p><span class="links">concept.html · concept.md</span></a>
+    <a class="card doc" href="product-vision.html"><span class="badge">产品</span><h3>产品形态与愿景</h3><p>嵌在开发流程里的 Skill；本地优先、云端可选；多项目总览与"今天最值得做的三件事"。</p><span class="links">product-vision.html · .md</span></a>
+    <a class="card doc" href="p0-engine.html"><span class="badge done">P0 完成</span><h3>pm.yaml 与计算引擎</h3><p>格式与 8 类校验；生效、根因、目标缺口、杠杆推荐、成本、蓝图推导；示例项目的真实计算结果。</p><span class="links">p0-engine.html · .md</span></a>
+    <a class="card doc" href="p1-dashboard.html"><span class="badge done">P1 完成</span><h3>项目地图页面</h3><p>一条命令生成单文件、离线、可交互的五视图页面；内嵌真实生成的示例。</p><span class="links">p1-dashboard.html · .md</span></a>
+    <a class="card doc" href="p2-skill.html"><span class="badge done">P2 完成</span><h3>Claude Code 插件</h3><p>Skill + 三个钩子：开工前锁定验收条目、记录 token、会话结束后台验收；终端确认与本机信任。</p><span class="links">p2-skill.html · .md</span></a>
+    <a class="card doc" href="assets/demo-dashboard.html"><span class="badge">示例</span><h3>示例项目地图</h3><p>智能知识库问答平台：23 个节点、3 个目标，五个视图都可以直接操作。</p><span class="links">demo-dashboard.html</span></a>
+  </div>
+</section>
+
+<section aria-labelledby="h3">
+  <div class="sec-head">
+    <span class="sec-num">03</span><h2 id="h3">一次会话里，谁做什么</h2>
+    <p class="sub">你只在两处出手：在聊天里确认验收条目、在终端里按 y 锁定。其余由 AI 和钩子完成。</p>
+  </div>
+  <figure class="card figure" style="margin:0"><img src="images/lifecycle.svg" width="960" height="320" alt="会话开始注入下一步，AI 声明模块、起草条目，人逐条确认，测试先失败，人在终端按 y 锁定，AI 实现到通过，钩子记录 token 并在后台验收"></figure>
+</section>
+
+<section aria-labelledby="h4">
+  <div class="sec-head"><span class="sec-num">04</span><h2 id="h4">三步开始</h2></div>
+  <div class="steps">
+    <div class="card"><span class="step-no">1</span><b>添加插件市场</b><code>claude plugin marketplace add MiniBotFactory/ai-projects-management</code></div>
+    <div class="card"><span class="step-no">2</span><b>安装插件</b><code>claude plugin install ai-pm@ai-pm-local</code></div>
+    <div class="card"><span class="step-no">3</span><b>在项目里新开会话</b><code>帮我初始化项目地图</code></div>
+  </div>
+</section>
+
+<section aria-labelledby="h5">
+  <div class="sec-head"><span class="sec-num">05</span><h2 id="h5">路线</h2></div>
+  <div class="card road">
+    <div class="phase"><div class="dot">P0</div><h4>计算引擎</h4><p>已完成</p></div>
+    <div class="phase"><div class="dot">P1</div><h4>项目地图页面</h4><p>已完成</p></div>
+    <div class="phase"><div class="dot">P2</div><h4>Claude Code 插件</h4><p>已完成</p></div>
+    <div class="phase"><div class="dot">P3</div><h4>常驻面板</h4><p>计划中</p></div>
+    <div class="phase"><div class="dot">P4</div><h4>云端与多项目</h4><p>计划中</p></div>
+  </div>
+</section>
+
+<footer>文字版见仓库根目录 README.md</footer>
+</main>
+</body>
+</html>
