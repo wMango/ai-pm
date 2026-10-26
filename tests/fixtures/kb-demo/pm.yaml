@@ -1,0 +1,66 @@
+# 示例项目：智能知识库问答平台（与 docs/concept.html 中的示例对应）
+version: 1
+project: 智能知识库问答平台
+
+views:
+  functional:
+    - { id: f-login, name: 账号登录, acceptance: [features/login.feature] }
+    - { id: f-upload, name: 上传文档, acceptance: [features/upload.feature] }
+    - id: f-ask
+      name: 基于文档问答
+      acceptance: [features/ask.feature]
+      depends: [{ on: f-upload }]
+    - { id: f-cite, name: 查看引用 }
+    - { id: f-billing, name: 按用量计费 }
+
+  logical:
+    - { id: login, name: 登录页, layer: front, acceptance: [t/login.spec.ts], depends: [{ on: auth }] }
+    - { id: chatui, name: 对话界面, layer: front, acceptance: [t/chatui.spec.ts], depends: [{ on: chatsvc }] }
+    - { id: kb, name: 知识库管理台, layer: front, acceptance: [t/kb.spec.ts], depends: [{ on: parse }] }
+    - { id: dash, name: 数据看板, layer: front, depends: [{ on: bill }] }
+    - { id: auth, name: 用户认证, layer: service, acceptance: [t/auth.test.ts], depends: [{ on: userdb }] }
+    - id: chatsvc
+      name: 对话服务
+      layer: service
+      acceptance: [t/chatsvc.test.ts]
+      depends: [{ on: retr }, { on: llm }]
+    - { id: retr, name: 向量检索, layer: service, depends: [{ on: vdb }] }
+    - id: parse
+      name: 文档解析
+      layer: service
+      acceptance: [t/parse.test.ts]
+      depends: [{ on: oss }, { on: retr }]
+    - { id: bill, name: 计费服务, layer: service, depends: [{ on: userdb }] }
+    - { id: userdb, name: 用户库, layer: data, acceptance: [t/userdb.test.ts] }
+    - { id: vdb, name: 向量数据库, layer: data }
+    - { id: oss, name: 对象存储, layer: data, acceptance: [t/oss.test.ts] }
+    - { id: llm, name: LLM 网关, layer: external, acceptance: [t/llm.test.ts] }
+
+  physical:
+    - { id: p-pg, name: PG 主库, acceptance: [ops/pg.sh] }
+    - { id: p-pgvec, name: PG 向量实例 }
+    - { id: p-s3, name: S3 存储桶, acceptance: [ops/s3.sh] }
+    - { id: p-app-1, name: 应用服务器 1, acceptance: [ops/app1.sh] }
+    - { id: p-app-2, name: 应用服务器 2, acceptance: [ops/app2.sh] }
+
+mappings:
+  - { from: f-login, to: login, kind: realized_by }
+  - { from: f-upload, to: kb, kind: realized_by }
+  - { from: f-ask, to: chatui, kind: realized_by }
+  - { from: f-billing, to: dash, kind: realized_by }
+  - { from: userdb, to: p-pg, kind: deployed_on }
+  - { from: vdb, to: p-pgvec, kind: deployed_on }
+  - { from: oss, to: p-s3, kind: deployed_on }
+  - { from: chatsvc, to: [p-app-1, p-app-2], kind: deployed_on, require: any }
+
+goals:
+  - id: G1
+    name: 用户能基于自有文档提问并得到答案
+    requires: [f-login, f-ask]
+    journey:
+      - { step: 登录, functional: f-login }
+      - { step: 上传文档, functional: f-upload }
+      - { step: 提问, functional: f-ask }
+      - { step: 查看引用, functional: f-cite, slice: later }
+  - { id: G2, name: 用户能安全登录与管理账号, requires: [f-login] }
+  - { id: G3, name: 平台可按用量计费, requires: [f-billing] }

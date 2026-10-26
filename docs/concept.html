@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>图形化项目管理</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/concept.css">
+</head>
+<body>
+<main>
+
+<header class="hero">
+  <div>
+    <div class="eyebrow">Concept · AI-era Project Management</div>
+    <h1>项目被 AI 放大了，<br>人需要<em>看图</em>管理</h1>
+    <p class="lead">不再用列表追踪"做没做"，而是在架构图上直接看到：哪里已生效、哪里被阻塞、离每个目标还差什么、下一步做哪件事杠杆最大。</p>
+  </div>
+  <figure class="hero-chart" style="margin:0" aria-label="AI 交付规模与人的管理带宽对比">
+    <svg id="hero-svg" viewBox="0 0 520 300" role="img"></svg>
+  </figure>
+</header>
+
+<section aria-labelledby="s1">
+  <div class="sec-head">
+    <span class="sec-num">01</span><h2 id="s1">核心概念：做了 ≠ 生效</h2>
+    <p class="sub">每个模块有四种状态。一个模块只有在自身完成、且所有硬依赖都已生效时，才真正"生效"。</p>
+  </div>
+  <div class="states" id="states"></div>
+</section>
+
+<section aria-labelledby="s2">
+  <div class="sec-head">
+    <span class="sec-num">02</span><h2 id="s2">视图一 · 架构地图</h2>
+    <p class="sub">示例项目「智能知识库问答平台」。切换视角对比：同一张图，在"建成视角"里一片绿，在"生效视角"里暴露出被阻塞的区域。点击任一模块查看依赖链。</p>
+  </div>
+  <div class="map-wrap">
+    <div class="card map">
+      <div class="map-toolbar">
+        <div class="seg" role="group" aria-label="视角切换">
+          <button type="button" data-mode="built" aria-pressed="false">建成视角</button>
+          <button type="button" data-mode="effective" aria-pressed="true">生效视角</button>
+        </div>
+        <div class="legend" id="legend"></div>
+      </div>
+      <svg id="map-svg" viewBox="0 0 1060 490" role="img" aria-label="项目模块架构图"></svg>
+    </div>
+    <aside class="card panel" id="panel" aria-live="polite"></aside>
+  </div>
+</section>
+
+<section aria-labelledby="s3">
+  <div class="sec-head">
+    <span class="sec-num">03</span><h2 id="s3">视图二 · 阻塞是如何传播的</h2>
+    <p class="sub">根因只有两个未建模块，却让三个已经写完的模块全部失效。传统看板会把它们显示为"已完成"。</p>
+  </div>
+  <div class="card chain"><svg id="chain-svg" viewBox="0 0 980 230" role="img" aria-label="阻塞传播链"></svg></div>
+</section>
+
+<section aria-labelledby="s4">
+  <div class="sec-head">
+    <span class="sec-num">04</span><h2 id="s4">视图三 · 目标缺口与下一步</h2>
+    <p class="sub">从目标倒推：每个目标展开其依赖闭包，显示还缺什么、什么被卡住，并按杠杆给出下一步。</p>
+  </div>
+  <div class="goals" id="goals"></div>
+  <div class="lever">
+    <div class="card lever-chart">
+      <h3>下一步杠杆排序</h3>
+      <p>完成该模块后，下游有多少模块不再被它阻塞</p>
+      <svg id="lever-svg" viewBox="0 0 560 230" role="img" aria-label="杠杆排序条形图" style="width:100%;height:auto;display:block"></svg>
+    </div>
+    <div class="card whatif" id="whatif"></div>
+  </div>
+</section>
+
+<section aria-labelledby="sc">
+  <div class="sec-head">
+    <span class="sec-num">05</span><h2 id="sc">视图四 · 成本：投入花在了哪里</h2>
+    <p class="sub">决策 6：成本只展示、不计入进度。每个气泡是一个模块，横轴是已投入天数，纵轴是消耗的 token，颜色是生效状态。</p>
+  </div>
+  <div class="cost-wrap">
+    <div class="card cost-chart"><svg id="cost-svg" viewBox="0 0 660 380" role="img" aria-label="模块成本气泡图"></svg></div>
+    <aside class="card cost-side" id="cost-side"></aside>
+  </div>
+</section>
+
+<section aria-labelledby="sb">
+  <div class="sec-head">
+    <span class="sec-num">06</span><h2 id="sb">视图五 · 旅程蓝图：用户能走多远</h2>
+    <p class="sub">借鉴服务蓝图、旅程地图与故事地图。横向是目标 G1 的用户旅程，纵向泳道对应三套架构；蓝图由映射自动推出，不手画。</p>
+  </div>
+  <div class="card blueprint"><svg id="blueprint-svg" viewBox="0 0 1000 600" role="img" aria-label="目标 G1 的旅程蓝图"></svg></div>
+</section>
+
+<section aria-labelledby="sd">
+  <div class="sec-head">
+    <span class="sec-num">07</span><h2 id="sd">设计决策 D1–D5</h2>
+    <p class="sub">2026-10-26 确定：节点粒度、状态依据、三套架构的关系、跨视图阻塞传播，以及验收测试由谁来写。</p>
+  </div>
+  <div class="decisions">
+    <article class="card decision">
+      <div class="d-tag mono">D1 · 粒度</div>
+      <h3>一个节点 = 一项可独立验收的能力</h3>
+      <svg id="d1-svg" viewBox="0 0 340 200" role="img" aria-label="每个视图最多 40 个节点"></svg>
+      <p>拿不出验收标准的，说明拆得不对。单个视图不超过 40 个节点，超出就分层折叠。</p>
+    </article>
+    <article class="card decision">
+      <div class="d-tag mono">D2 · 依据</div>
+      <h3>看成果，不看成本</h3>
+      <svg id="d2-svg" viewBox="0 0 340 200" role="img" aria-label="状态只由验收测试决定"></svg>
+      <p>代码行数、提交次数、耗时都是成本，不算进度。AI 写了几千行但测试没过，依然是"进行中"。</p>
+    </article>
+    <article class="card decision">
+      <div class="d-tag mono">D3 · 视图</div>
+      <h3>三套架构各说各的，部分映射</h3>
+      <svg id="d3-svg" viewBox="0 0 340 200" role="img" aria-label="三套架构平面与部分映射"></svg>
+      <p>功能、逻辑、物理各有自己的节点，不要求一一对应。映射是可选的，但一旦建立就是真实约束。</p>
+    </article>
+    <article class="card decision wide">
+      <div class="d-tag mono">D4 · 跨视图传播</div>
+      <h3>阻塞沿映射向上传导：物理 → 逻辑 → 功能</h3>
+      <svg id="d4-svg" viewBox="0 0 960 236" role="img" aria-label="跨视图阻塞传播示例"></svg>
+      <p>映射等同于一条跨视图的硬依赖：支撑节点未生效，被支撑节点也不生效；反方向不传播。冗余部署可标 <span class="mono">require: any</span>，任一健康即可。本视图依赖与跨视图映射合起来必须无环。</p>
+    </article>
+    <article class="card decision wide">
+      <div class="d-tag mono">D5 · 验收测试</div>
+      <h3>人只把关"什么算成果"，其余交给 AI</h3>
+      <svg id="d5-svg" viewBox="0 0 960 260" role="img" aria-label="验收测试分工流程"></svg>
+      <p>验收条目写成 Gherkin <span class="mono">.feature</span>：功能层由人逐条确认，逻辑层与物理层由 AI 在此基础上生成。确认后锁定指纹；测试文件一旦被改动，节点挂"待复核"，不阻断工作，人复核后重新锁定。</p>
+    </article>
+  </div>
+</section>
+
+<section aria-labelledby="s5">
+  <div class="sec-head">
+    <span class="sec-num">08</span><h2 id="s5">运作机制：让 AI 维护这张图</h2>
+    <p class="sub">人不手填状态。AI 扫描仓库生成项目模型，每次编码会话后运行验收测试、按结果刷新，并把"下一步"反哺给 AI。</p>
+  </div>
+  <div class="card pipe"><svg id="pipe-svg" viewBox="0 0 1000 232" role="img" aria-label="运作流程"></svg></div>
+</section>
+
+<section aria-labelledby="s6">
+  <div class="sec-head">
+    <span class="sec-num">09</span><h2 id="s6">MVP 路线</h2>
+  </div>
+  <div class="card road">
+    <div class="phase"><div class="dot">P0</div><h4>数据模型</h4><p>pm.yaml schema + 生效 / 缺口 / 杠杆 / 成本计算引擎</p></div>
+    <div class="phase"><div class="dot">P1</div><h4>静态渲染</h4><p>从 pm.yaml 生成单文件 HTML 五视图</p></div>
+    <div class="phase"><div class="dot">P2</div><h4>Skill 接入</h4><p>项目开始时初始化 .pm/，每个功能起草验收条目，会话结束跑测试、记 token</p></div>
+    <div class="phase"><div class="dot">P3</div><h4>本地面板</h4><p>Claude Code 内常驻面板，随代码变化实时刷新</p></div>
+    <div class="phase"><div class="dot">P4</div><h4>云端与多项目</h4><p>账号下自动注册项目，云上看单项目页与多项目总览</p></div>
+  </div>
+</section>
+
+<footer>文字底稿见 concept.md · 产品形态见 <a href="product-vision.html">product-vision.html</a> · 示例数据为虚构项目</footer>
+</main>
+
+<script src="assets/pm-core.js"></script>
+<script src="assets/concept-views.js"></script>
+<script src="assets/concept-decisions.js"></script>
+<script src="assets/concept-cost.js"></script>
+<script src="assets/concept-blueprint.js"></script>
+<script>
+  (window.PM_RENDERERS || []).forEach((render) => {
+    try { render(); } catch (err) {
+      const note = document.createElement("p");
+      note.className = "callout";
+      note.textContent = `页面渲染出错（${render.name}）：${err.message}`;
+      document.querySelector("main").prepend(note);
+      console.error(err);
+    }
+  });
+</script>
+</body>
+</html>

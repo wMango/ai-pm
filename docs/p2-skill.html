@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>P2 Claude Code 插件</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/concept.css">
+<style>
+.pad { padding: 20px; }
+.scroll-x { overflow-x: auto; }
+.scroll-x svg { min-width: 800px; }
+.wide-svg { width: 100%; height: auto; display: block; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.cmd { font: 500 .82rem var(--font-mono); background: var(--paper-2); border-radius: 6px; padding: 2px 8px; }
+.install { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.install .card { padding: 18px; display: flex; flex-direction: column; gap: 8px; }
+.install b { font-size: 1rem; }
+.install code { font: 500 .78rem var(--font-mono); background: var(--paper-2); border-radius: 6px; padding: 8px 10px; overflow-wrap: anywhere; }
+.step-no { font: 900 1.6rem var(--font-mono); color: var(--ink-3); }
+@media (max-width: 900px) { .two, .install { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main>
+
+<header class="hero">
+  <div>
+    <div class="eyebrow">P2 · Claude Code Plugin</div>
+    <h1>让项目地图<br><em>随开发自动生长</em></h1>
+    <p class="lead">一个 Skill 加三个钩子：开工前起草并锁定验收条目，每轮对话记录 token，会话结束在后台跑验收、刷新地图，新会话开始时把"下一步"交给 AI。</p>
+  </div>
+  <figure class="hero-chart" style="margin:0"><svg id="hero-svg" class="wide-svg" viewBox="0 0 520 320" role="img" aria-label="三个阶段与三个钩子"></svg></figure>
+</header>
+
+<section aria-labelledby="r1">
+  <div class="sec-head">
+    <span class="sec-num">01</span><h2 id="r1">一次会话里，谁在什么时候做什么</h2>
+    <p class="sub">人只在两处出手：确认目标、确认功能层验收条目。其余由 AI 和钩子完成。</p>
+  </div>
+  <div class="card pad scroll-x"><svg id="lanes-svg" class="wide-svg" viewBox="0 0 1000 330" role="img" aria-label="人、AI、钩子三条泳道的时间线"></svg></div>
+</section>
+
+<section aria-labelledby="r2">
+  <div class="sec-head">
+    <span class="sec-num">02</span><h2 id="r2">SessionEnd 只有 1.5 秒：交给后台</h2>
+    <p class="sub">官方限制 SessionEnd 钩子约 1.5 秒且插件无法调高。实测钩子 0.08 秒返回，验收由脱离的后台进程完成。</p>
+  </div>
+  <div class="card pad scroll-x"><svg id="end-svg" class="wide-svg" viewBox="0 0 1000 220" role="img" aria-label="会话结束的时间预算"></svg></div>
+</section>
+
+<section aria-labelledby="r3">
+  <div class="sec-head">
+    <span class="sec-num">03</span><h2 id="r3">Token 怎么算</h2>
+    <p class="sub">以本项目这次真实会话为例：缓存读取是每轮重复读取上下文，计入会淹没其他一切。默认只算"新处理"的部分，明细全部保留。</p>
+  </div>
+  <div class="two">
+    <div class="card pad"><svg id="tokens-svg" class="wide-svg" viewBox="0 0 460 280" role="img" aria-label="本次会话的 token 构成"></svg></div>
+    <div class="card pad"><svg id="delta-svg" class="wide-svg" viewBox="0 0 460 280" role="img" aria-label="增量记录与按消息去重"></svg></div>
+  </div>
+</section>
+
+<section aria-labelledby="r4">
+  <div class="sec-head">
+    <span class="sec-num">04</span><h2 id="r4">锁定与待复核</h2>
+    <p class="sub">锁定记录 sha256 指纹。任何能让"测试变松"的改动都会被标出来，等人复核。</p>
+  </div>
+  <div class="card pad scroll-x"><svg id="lock-svg" class="wide-svg" viewBox="0 0 1000 250" role="img" aria-label="锁定与待复核状态机"></svg></div>
+</section>
+
+<section aria-labelledby="r45">
+  <div class="sec-head">
+    <span class="sec-num">05</span><h2 id="r45">审查与加固</h2>
+    <p class="sub">独立安全审查发现 2 个 HIGH、8 个 MEDIUM、6 个 LOW。左边是处理情况，右边是新增的"本机信任"闸门：别人改过的测试命令，不会在会话结束时被无人值守地执行。</p>
+  </div>
+  <div class="two">
+    <div class="card pad"><svg id="review-svg" class="wide-svg" viewBox="0 0 460 260" role="img" aria-label="审查发现与处理情况"></svg></div>
+    <div class="card pad"><svg id="trust-svg" class="wide-svg" viewBox="0 0 460 260" role="img" aria-label="runners 信任闸门"></svg></div>
+  </div>
+</section>
+
+<section aria-labelledby="r5">
+  <div class="sec-head">
+    <span class="sec-num">06</span><h2 id="r5">.pm/ 里有什么</h2>
+  </div>
+  <div class="two">
+    <div class="card pad"><svg id="tree-svg" class="wide-svg" viewBox="0 0 460 300" role="img" aria-label=".pm 目录结构"></svg></div>
+    <div class="card pad"><svg id="tests-svg" class="wide-svg" viewBox="0 0 460 310" role="img" aria-label="测试分布"></svg></div>
+  </div>
+</section>
+
+<section aria-labelledby="r6">
+  <div class="sec-head"><span class="sec-num">07</span><h2 id="r6">安装</h2></div>
+  <div class="install">
+    <div class="card"><span class="step-no">1</span><b>构建命令行</b><code>npm run build:plugin</code></div>
+    <div class="card"><span class="step-no">2</span><b>添加本地插件市场</b><code>claude plugin marketplace add &lt;本仓库路径&gt;</code></div>
+    <div class="card"><span class="step-no">3</span><b>安装插件</b><code>claude plugin install ai-pm@ai-pm-local</code></div>
+  </div>
+</section>
+
+<footer>文字底稿见 p2-skill.md · 页面见 <a href="p1-dashboard.html">p1-dashboard.html</a> · 引擎见 <a href="p0-engine.html">p0-engine.html</a></footer>
+</main>
+
+<script src="assets/pm-core.js"></script>
+<script src="assets/p2.js"></script>
+<script>
+  (window.PM_RENDERERS || []).forEach((render) => {
+    try { render(); } catch (err) {
+      const note = document.createElement("p");
+      note.className = "callout";
+      note.textContent = `页面渲染出错（${render.name}）：${err.message}`;
+      document.querySelector("main").prepend(note);
+      console.error(err);
+    }
+  });
+</script>
+</body>
+</html>

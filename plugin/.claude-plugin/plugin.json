@@ -1,0 +1,13 @@
+{
+  "name": "ai-pm",
+  "version": "0.2.0",
+  "description": "AI 编码时代的图形化项目管理：用架构图看清进度，按验收测试判断生效，从目标倒推下一步",
+  "keywords": [
+    "project-management",
+    "dashboard",
+    "acceptance-tests"
+  ],
+  "author": {
+    "name": "ai-pm"
+  }
+}

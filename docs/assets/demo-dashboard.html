@@ -1,0 +1,828 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-Cccy5e0WHElKtW9Jqgys/uqBOI/jq3gBKoUYNcB1YUU='; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'">
+<title>智能知识库问答平台 · 项目地图</title>
+<style>
+:root {
+  --paper: #f4f1ea; --paper-2: #ebe6db; --card: #fffdf8;
+  --ink: #18222f; --ink-2: #4a5666; --ink-3: #8a94a1;
+  --grid: rgba(24, 34, 47, 0.06); --line: rgba(24, 34, 47, 0.14);
+  --ok: #17936b; --ok-tint: #dff3ea;
+  --blocked: #d9821a; --blocked-tint: #fcecd5;
+  --doing: #3866d6; --doing-tint: #e1e9fb;
+  --todo: #97a0ab; --todo-tint: #eef0f2;
+  --break: #d4443b;
+  --shadow: 0 1px 0 rgba(24,34,47,.06), 0 12px 32px -18px rgba(24,34,47,.35);
+  --font-sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --radius: 16px;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #10161f; --paper-2: #151d28; --card: #19222e;
+    --ink: #e8edf3; --ink-2: #aab5c3; --ink-3: #6f7b8a;
+    --grid: rgba(232,237,243,.05); --line: rgba(232,237,243,.14);
+    --ok: #3cc596; --ok-tint: #143a2e; --blocked: #f0a443; --blocked-tint: #3d2c14;
+    --doing: #6f96f2; --doing-tint: #1a2a4d; --todo: #7d8794; --todo-tint: #222b36; --break: #f06a60;
+    --shadow: 0 1px 0 rgba(0,0,0,.3), 0 16px 36px -18px rgba(0,0,0,.7);
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background-color: var(--paper);
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 28px 28px;
+  color: var(--ink); font-family: var(--font-sans); line-height: 1.6; -webkit-font-smoothing: antialiased;
+}
+main { max-width: 1240px; margin: 0 auto; padding: 0 16px 64px; }
+h1 { font-size: clamp(1.8rem, 1.2rem + 2.4vw, 3rem); margin: 6px 0; font-weight: 900; letter-spacing: -.02em; line-height: 1.15; overflow-wrap: anywhere; }
+h2 { font-size: clamp(1.3rem, 1.1rem + 1vw, 1.8rem); margin: 0; font-weight: 900; }
+section { margin-top: 56px; scroll-margin-top: 64px; }
+.sub { color: var(--ink-2); font-size: .92rem; margin: 6px 0 16px; }
+.eyebrow { font: 700 12px var(--font-mono); letter-spacing: .12em; color: var(--ink-3); }
+.mono { font-family: var(--font-mono); }
+.card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); }
+.pad { padding: 18px; }
+.scroll-x { overflow-x: auto; }
+.scroll-x svg { display: block; width: 100%; height: auto; }
+.top { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; padding-top: 48px; flex-wrap: wrap; }
+.metrics { display: flex; gap: 18px; }
+.metric { text-align: center; font-size: .8rem; color: var(--ink-2); }
+.metric b { display: block; color: var(--ink); font-size: .92rem; }
+.jump { position: sticky; top: 0; z-index: 5; display: flex; gap: 6px; flex-wrap: wrap; padding: 10px 0; margin-top: 18px; background: var(--paper); border-bottom: 1px solid var(--line); }
+.jump a { color: var(--ink-2); text-decoration: none; font-size: .86rem; padding: 4px 10px; border-radius: 999px; }
+.jump a:hover, .jump a:focus-visible { background: var(--ink); color: var(--card); outline: none; }
+.warning { margin-top: 12px; border-left: 4px solid var(--blocked); background: var(--blocked-tint); padding: 8px 12px; border-radius: 0 8px 8px 0; font-size: .86rem; }
+.render-error { border-left: 4px solid var(--break); background: var(--paper-2); padding: 10px 12px; border-radius: 0 8px 8px 0; }
+.empty { color: var(--ink-3); font-size: .9rem; padding: 18px; text-align: center; }
+
+.map-wrap { display: grid; grid-template-columns: 1fr 320px; gap: 14px; }
+.map-card { padding: 14px; min-width: 0; }
+.toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
+.seg { display: inline-flex; background: var(--paper-2); padding: 3px; border-radius: 999px; }
+.seg button { border: 0; background: transparent; color: var(--ink-2); font: 500 .86rem var(--font-sans); padding: 6px 14px; border-radius: 999px; cursor: pointer; transition: background .25s var(--ease), color .25s var(--ease); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--card); }
+.seg button:focus-visible { outline: 2px solid var(--doing); outline-offset: 2px; }
+.legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: .78rem; color: var(--ink-2); margin-left: auto; }
+.legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -1px; margin-right: 5px; border: 2px solid; }
+.node { cursor: pointer; transition: opacity .3s var(--ease); }
+.node:focus-visible { outline: none; }
+.node:focus-visible .body, .node:hover .body { stroke-width: 3.2; }
+.dim { opacity: .15; }
+.pulse { stroke-dasharray: 6 6; animation: flow 1.2s linear infinite; }
+@keyframes flow { to { stroke-dashoffset: -24; } }
+.panel { padding: 18px; display: flex; flex-direction: column; gap: 12px; align-self: start; }
+.panel h3 { margin: 0; font-size: 1.2rem; overflow-wrap: anywhere; }
+.kv { display: grid; grid-template-columns: 64px 1fr; gap: 8px 10px; font-size: .86rem; margin: 0; }
+.kv dt { color: var(--ink-3); }
+.kv dd { margin: 0; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { font-size: .78rem; padding: 1px 9px; border-radius: 999px; border: 1.5px solid; white-space: nowrap; background: none; font-family: inherit; color: var(--ink); }
+button.chip { cursor: pointer; }
+button.chip:hover, button.chip:focus-visible { outline: 2px solid var(--doing); outline-offset: 1px; }
+.chip.todo { color: var(--ink-2); border-color: var(--todo); border-style: dashed; }
+.chip.doing { color: var(--doing); border-color: var(--doing); background: var(--doing-tint); }
+.chip.blocked { color: var(--blocked); border-color: var(--blocked); background: var(--blocked-tint); }
+.chip.ok { color: var(--ok); border-color: var(--ok); background: var(--ok-tint); }
+.chip.plain { border-color: var(--ink-3); }
+.callout { border-left: 4px solid var(--break); background: var(--paper-2); padding: 9px 12px; border-radius: 0 8px 8px 0; font-size: .85rem; }
+.callout.good { border-color: var(--ok); }
+
+.goals { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+.goal-card { padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+.goal-top { display: flex; gap: 14px; align-items: center; }
+.goal-card h3 { margin: 0; font-size: 1rem; line-height: 1.4; overflow-wrap: anywhere; }
+.row-label { font-size: .74rem; color: var(--ink-3); margin-bottom: 5px; }
+.recs-wrap { display: grid; grid-template-columns: 1.5fr 1fr; gap: 14px; margin-top: 14px; }
+.rec-row { display: grid; grid-template-columns: 120px 1fr; gap: 4px 12px; padding: 10px 0; border-bottom: 1px dashed var(--line); }
+.rec-row:last-child, .block-row:last-child { border-bottom: 0; }
+.block-row { display: grid; grid-template-columns: minmax(200px, 300px) 1fr; gap: 16px; padding: 12px 0; border-bottom: 1px dashed var(--line); }
+.rec-name { font-weight: 900; font-size: .9rem; overflow-wrap: anywhere; }
+.rec-meta { grid-column: 2; font-size: .78rem; color: var(--ink-2); }
+.whatif { background: var(--ink); color: var(--card); }
+.whatif h3 { margin: 4px 0 8px; color: var(--card); }
+.whatif p { margin: 0 0 12px; font-size: .84rem; opacity: .75; }
+.cost-wrap { display: grid; grid-template-columns: 1fr 300px; gap: 14px; }
+.kpi { font: 900 2rem/1 var(--font-mono); }
+.kpi-label { font-size: .78rem; color: var(--ink-3); margin: 12px 0 6px; }
+.bp-card { padding: 14px; margin-bottom: 14px; }
+.bp-card h3 { margin: 4px 6px 10px; font-size: 1.02rem; }
+footer { margin-top: 56px; text-align: center; color: var(--ink-3); font-size: .8rem; }
+
+@media (max-width: 900px) {
+  .map-wrap, .recs-wrap, .cost-wrap { grid-template-columns: 1fr; }
+  .legend { margin-left: 0; }
+  .rec-row, .block-row { grid-template-columns: 1fr; }
+  .rec-meta { grid-column: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pulse { animation: none; }
+  * { transition: none !important; }
+}
+
+</style>
+</head>
+<body>
+<main>
+<header class="top">
+  <div>
+    <div class="eyebrow">项目地图 · 由 pm.yaml 生成</div>
+    <h1 id="project-name"></h1>
+    <p class="sub" id="generated-at"></p>
+  </div>
+  <div id="metrics" class="metrics"></div>
+</header>
+<div id="warnings"></div>
+<nav class="jump" aria-label="视图导航">
+  <a href="#map-section">① 架构地图</a><a href="#blockers-section">② 依赖与阻塞</a><a href="#goals-section">③ 目标与下一步</a><a href="#cost-section">④ 成本</a><a href="#blueprint-section">⑤ 旅程蓝图</a>
+</nav>
+<section id="map-section">
+  <h2>① 架构地图</h2>
+  <p class="sub">切换三套架构；"生效视角"会暴露被卡住的模块。点击模块查看依赖、映射与根因。</p>
+  <div class="map-wrap">
+    <div class="card map-card">
+      <div class="toolbar">
+        <div class="seg" role="group" aria-label="架构视图">
+          <button type="button" data-view="functional">功能</button><button type="button" data-view="logical">逻辑</button><button type="button" data-view="physical">物理</button>
+        </div>
+        <div class="seg" role="group" aria-label="视角">
+          <button type="button" data-mode="built">建成视角</button><button type="button" data-mode="effective">生效视角</button>
+        </div>
+        <div class="legend" id="legend"></div>
+      </div>
+      <div class="scroll-x"><svg id="map-svg" role="img" aria-label="架构地图"></svg></div>
+    </div>
+    <aside class="card panel" id="panel" aria-live="polite"></aside>
+  </div>
+</section>
+<section id="blockers-section">
+  <h2>② 依赖与阻塞</h2>
+  <p class="sub">哪些未完成的模块卡住了最多已经写好的模块。</p>
+  <div class="card pad" id="blockers"></div>
+</section>
+<section id="goals-section">
+  <h2>③ 目标与下一步</h2>
+  <p class="sub">每个目标还差什么；按杠杆排序的下一步，以及做完之后目标会怎样变化。</p>
+  <div class="goals" id="goals"></div>
+  <div class="recs-wrap"><div class="card pad" id="recs"></div><div class="card pad whatif" id="whatif"></div></div>
+</section>
+<section id="cost-section">
+  <h2>④ 成本</h2>
+  <p class="sub">只展示投入，不计入进度。气泡 = 模块，横轴天数，纵轴 token，颜色是生效状态。</p>
+  <div class="cost-wrap" id="cost-body"><div class="card pad scroll-x"><svg id="cost-svg" role="img" aria-label="成本气泡图"></svg></div><aside class="card pad" id="cost-side"></aside></div>
+</section>
+<section id="blueprint-section">
+  <h2>⑤ 旅程蓝图</h2>
+  <p class="sub">横向是用户旅程，纵向泳道对应三套架构；红线表示从可见线以下断掉的地方。</p>
+  <div id="blueprints"></div>
+</section>
+<footer>本页离线可用 · 由 ai-pm-engine 生成</footer>
+</main>
+<script type="application/json" id="pm-data">{"project":"智能知识库问答平台","generatedAt":"2026-10-26T09:00:00.000Z","settings":{"maxNodesPerView":40,"stuckDays":5,"testTimeoutSec":300,"tokenCount":"processed","runners":{".sh":"bash {file}"}},"metrics":{"total":23,"built":12,"effective":9},"nodes":[{"id":"f-login","name":"账号登录","view":"functional","status":"done","state":"ok","effective":true,"crossViewBlocked":false,"pendingReview":true,"rootBlockers":[],"tokens":0,"days":0,"goals":["G1","G2"]},{"id":"f-upload","name":"上传文档","view":"functional","status":"doing","state":"doing","effective":false,"crossViewBlocked":false,"pendingReview":true,"rootBlockers":["kb","p-pgvec","retr","vdb"],"tokens":0,"days":0,"goals":["G1"]},{"id":"f-ask","name":"基于文档问答","view":"functional","status":"doing","state":"doing","effective":false,"crossViewBlocked":false,"pendingReview":true,"rootBlockers":["f-upload","kb","p-pgvec","retr","vdb"],"tokens":0,"days":0,"goals":["G1"]},{"id":"f-cite","name":"查看引用","view":"functional","status":"todo","state":"todo","effective":false,"crossViewBlocked":false,"pendingReview":false,"rootBlockers":[],"tokens":0,"days":0,"goals":[]},{"id":"f-billing","name":"按用量计费","view":"functional","status":"todo","state":"todo","effective":false,"crossViewBlocked":false,"pendingReview":false,"rootBlockers":["bill","dash"],"tokens":0,"days":0,"goals":["G3"]},{"id":"login","name":"登录页","view":"logical","layer":"front","status":"done","state":"ok","effective":true,"crossViewBlocked":false,"pendingReview":true,"rootBlockers":[],"tokens":180000,"days":0,"goals":["G1","G2"]},{"id":"chatui","name":"对话界面","view":"logical","layer":"front","status":"done","state":"blocked","effective":false,"crossViewBlocked":false,"pendingReview":true,"rootBlockers":["p-pgvec","retr","vdb"],"tokens":0,"days":0,"goals":["G1"]},{"id":"kb","name":"知识库管理台","view":"logical","layer":"front","status":"doing","state":"doing","effective":false,"crossViewBlocked":false,"pendingReview":true,"rootBlockers":["p-pgvec","retr","vdb"],"tokens":610000,"days":6,"goals":["G1"]},{"id":"dash","name":"数据看板","view":"logical","layer":"front","status":"todo","state":"todo","effective":false,"crossViewBlocked":false,"pendingReview":false,"rootBlockers":["bill"],"tokens":0,"days":0,"goals":["G3"]},{"id":"auth","name":"用户认证","view":"logical","layer":"service","status":"done","state":"ok","effective":true,"crossViewBlocked":false,"pendingReview":true,"rootBlockers":[],"tokens":0,"days":0,"goals":["G1","G2"]},{"id":"chatsvc","name":"对话服务","view":"logical","layer":"service","status":"done","state":"blocked","effective":false,"crossViewBlocked":false,"pendingReview":true,"rootBlockers":["p-pgvec","retr","vdb"],"tokens":520000,"days":5,"goals":["G1"]},{"id":"retr","name":"向量检索","view":"logical","layer":"service","status":"todo","state":"todo","effective":false,"crossViewBlocked":false,"pendingReview":false,"rootBlockers":["p-pgvec","vdb"],"tokens":0,"days":0,"goals":["G1"]},{"id":"parse","name":"文档解析","view":"logical","layer":"service","status":"done","state":"blocked","effective":false,"crossViewBlocked":false,"pendingReview":true,"rootBlockers":["p-pgvec","retr","vdb"],"tokens":0,"days":0,"goals":["G1"]},{"id":"bill","name":"计费服务","view":"logical","layer":"service","status":"todo","state":"todo","effective":false,"crossViewBlocked":false,"pendingReview":false,"rootBlockers":[],"tokens":0,"days":0,"goals":["G3"]},{"id":"userdb","name":"用户库","view":"logical","layer":"data","status":"done","state":"ok","effective":true,"crossViewBlocked":false,"pendingReview":true,"rootBlockers":[],"tokens":0,"days":0,"goals":["G1","G2","G3"]},{"id":"vdb","name":"向量数据库","view":"logical","layer":"data","status":"todo","state":"todo","effective":false,"crossViewBlocked":false,"pendingReview":false,"rootBlockers":["p-pgvec"],"tokens":0,"days":0,"goals":["G1"]},{"id":"oss","name":"对象存储","view":"logical","layer":"data","status":"done","state":"ok","effective":true,"crossViewBlocked":false,"pendingReview":true,"rootBlockers":[],"tokens":0,"days":0,"goals":["G1"]},{"id":"llm","name":"LLM 网关","view":"logical","layer":"external","status":"done","state":"ok","effective":true,"crossViewBlocked":false,"pendingReview":true,"rootBlockers":[],"tokens":0,"days":0,"goals":["G1"]},{"id":"p-pg","name":"PG 主库","view":"physical","status":"done","state":"ok","effective":true,"crossViewBlocked":false,"pendingReview":true,"rootBlockers":[],"tokens":0,"days":0,"goals":["G1","G2","G3"]},{"id":"p-pgvec","name":"PG 向量实例","view":"physical","status":"todo","state":"todo","effective":false,"crossViewBlocked":false,"pendingReview":false,"rootBlockers":[],"tokens":0,"days":0,"goals":["G1"]},{"id":"p-s3","name":"S3 存储桶","view":"physical","status":"done","state":"ok","effective":true,"crossViewBlocked":false,"pendingReview":true,"rootBlockers":[],"tokens":0,"days":0,"goals":["G1"]},{"id":"p-app-1","name":"应用服务器 1","view":"physical","status":"done","state":"ok","effective":true,"crossViewBlocked":false,"pendingReview":true,"rootBlockers":[],"tokens":0,"days":0,"goals":["G1"]},{"id":"p-app-2","name":"应用服务器 2","view":"physical","status":"doing","state":"doing","effective":false,"crossViewBlocked":false,"pendingReview":true,"rootBlockers":[],"tokens":0,"days":0,"goals":["G1"]}],"edges":[{"from":"f-ask","to":"f-upload","kind":"hard"},{"from":"login","to":"auth","kind":"hard"},{"from":"chatui","to":"chatsvc","kind":"hard"},{"from":"kb","to":"parse","kind":"hard"},{"from":"dash","to":"bill","kind":"hard"},{"from":"auth","to":"userdb","kind":"hard"},{"from":"chatsvc","to":"retr","kind":"hard"},{"from":"chatsvc","to":"llm","kind":"hard"},{"from":"retr","to":"vdb","kind":"hard"},{"from":"parse","to":"oss","kind":"hard"},{"from":"parse","to":"retr","kind":"hard"},{"from":"bill","to":"userdb","kind":"hard"},{"from":"f-login","to":"login","kind":"realized_by","require":"all"},{"from":"f-upload","to":"kb","kind":"realized_by","require":"all"},{"from":"f-ask","to":"chatui","kind":"realized_by","require":"all"},{"from":"f-billing","to":"dash","kind":"realized_by","require":"all"},{"from":"userdb","to":"p-pg","kind":"deployed_on","require":"all"},{"from":"vdb","to":"p-pgvec","kind":"deployed_on","require":"all"},{"from":"oss","to":"p-s3","kind":"deployed_on","require":"all"},{"from":"chatsvc","to":"p-app-1","kind":"deployed_on","require":"any"},{"from":"chatsvc","to":"p-app-2","kind":"deployed_on","require":"any"}],"goals":[{"id":"G1","name":"用户能基于自有文档提问并得到答案","total":19,"effectiveCount":9,"ratio":0.47368421052631576,"toBuild":["f-ask","f-upload","kb","p-app-2","p-pgvec","retr","vdb"],"blocked":["chatsvc","chatui","parse"]},{"id":"G2","name":"用户能安全登录与管理账号","total":5,"effectiveCount":5,"ratio":1,"toBuild":[],"blocked":[]},{"id":"G3","name":"平台可按用量计费","total":5,"effectiveCount":2,"ratio":0.4,"toBuild":["bill","dash","f-billing"],"blocked":[]}],"recommendations":[{"target":"f-billing","plan":["bill","dash","f-billing"],"gain":60,"leverage":20,"goalDeltas":[{"goal":"G3","before":0.4,"after":1}],"unblocked":["bill","dash","f-billing"]},{"target":"dash","plan":["bill","dash"],"gain":40,"leverage":20,"goalDeltas":[{"goal":"G3","before":0.4,"after":0.8}],"unblocked":["bill","dash"]},{"target":"bill","plan":["bill"],"gain":19.999999999999996,"leverage":19.999999999999996,"goalDeltas":[{"goal":"G3","before":0.4,"after":0.6}],"unblocked":["bill"]},{"target":"retr","plan":["p-pgvec","retr","vdb"],"gain":31.578947368421055,"leverage":10.526315789473685,"goalDeltas":[{"goal":"G1","before":0.47368421052631576,"after":0.7894736842105263}],"unblocked":["chatsvc","chatui","p-pgvec","parse","retr","vdb"]},{"target":"kb","plan":["kb","p-pgvec","retr","vdb"],"gain":36.84210526315789,"leverage":9.210526315789473,"goalDeltas":[{"goal":"G1","before":0.47368421052631576,"after":0.8421052631578947}],"unblocked":["chatsvc","chatui","kb","p-pgvec","parse","retr","vdb"]},{"target":"f-upload","plan":["f-upload","kb","p-pgvec","retr","vdb"],"gain":42.10526315789474,"leverage":8.421052631578949,"goalDeltas":[{"goal":"G1","before":0.47368421052631576,"after":0.8947368421052632}],"unblocked":["chatsvc","chatui","f-upload","kb","p-pgvec","parse","retr","vdb"]},{"target":"f-ask","plan":["f-ask","f-upload","kb","p-pgvec","retr","vdb"],"gain":47.368421052631575,"leverage":7.894736842105263,"goalDeltas":[{"goal":"G1","before":0.47368421052631576,"after":0.9473684210526315}],"unblocked":["chatsvc","chatui","f-ask","f-upload","kb","p-pgvec","parse","retr","vdb"]},{"target":"vdb","plan":["p-pgvec","vdb"],"gain":10.526315789473689,"leverage":5.263157894736844,"goalDeltas":[{"goal":"G1","before":0.47368421052631576,"after":0.5789473684210527}],"unblocked":["p-pgvec","vdb"]},{"target":"p-app-2","plan":["p-app-2"],"gain":5.263157894736842,"leverage":5.263157894736842,"goalDeltas":[{"goal":"G1","before":0.47368421052631576,"after":0.5263157894736842}],"unblocked":["p-app-2"]},{"target":"p-pgvec","plan":["p-pgvec"],"gain":5.263157894736842,"leverage":5.263157894736842,"goalDeltas":[{"goal":"G1","before":0.47368421052631576,"after":0.5263157894736842}],"unblocked":["p-pgvec"]}],"cost":{"nodes":{"chatsvc":{"tokens":520000,"days":5},"kb":{"tokens":610000,"days":6},"login":{"tokens":180000,"days":0}},"totalTokens":1310000,"sunkTokens":1130000,"byState":{"ok":180000,"blocked":520000,"doing":610000,"todo":0},"byGoal":{"G1":1310000,"G2":180000,"G3":0},"stuck":["kb"],"unknownNodes":[],"unassignedTokens":0},"blueprints":[{"goal":"G1","steps":[{"step":"登录","functional":"f-login","slice":"now","lanes":{"front":["login"],"back":["auth"],"support":["userdb","p-pg"]},"status":"ok","root":null},{"step":"上传文档","functional":"f-upload","slice":"now","lanes":{"front":["kb"],"back":["retr","parse"],"support":["vdb","oss","p-pgvec","p-s3"]},"status":"broken","root":"p-pgvec"},{"step":"提问","functional":"f-ask","slice":"now","lanes":{"front":["chatui"],"back":["chatsvc","retr"],"support":["vdb","llm","p-pgvec","p-app-1","p-app-2"]},"status":"broken","root":"p-pgvec"},{"step":"查看引用","functional":"f-cite","slice":"later","lanes":{"front":[],"back":[],"support":[]},"status":"gap","root":null}],"summary":{"inScope":3,"usable":1}}],"warnings":[]}</script>
+<script>
+(() => {
+"use strict";
+// ---------- 通用工具（所有用户数据都通过 textContent / setAttribute 写入，绝不拼 HTML） ----------
+const SVG_NS = "http://www.w3.org/2000/svg";
+const VIEW_LABEL = { functional: "功能", logical: "逻辑", physical: "物理" };
+const LAYER_LABEL = { front: "前端层", service: "服务层", data: "数据层", external: "外部" };
+const STATE_META = {
+  todo: { label: "未建", color: "var(--todo)", tint: "var(--todo-tint)", dashed: true },
+  doing: { label: "进行中", color: "var(--doing)", tint: "var(--doing-tint)", dashed: true },
+  blocked: { label: "已建未生效", color: "var(--blocked)", tint: "var(--blocked-tint)", dashed: false },
+  ok: { label: "已生效", color: "var(--ok)", tint: "var(--ok-tint)", dashed: false },
+};
+
+const append = (node, children) => {
+  children.filter((c) => c !== null && c !== undefined && c !== false)
+    .forEach((c) => node.appendChild(typeof c === "string" || typeof c === "number" ? document.createTextNode(String(c)) : c));
+  return node;
+};
+const svg = (tag, attrs = {}, children = []) => {
+  const node = document.createElementNS(SVG_NS, tag);
+  Object.entries(attrs).forEach(([k, v]) => { if (v !== undefined && v !== null) node.setAttribute(k, String(v)); });
+  return append(node, children);
+};
+const el = (tag, attrs = {}, children = []) => {
+  const node = document.createElement(tag);
+  Object.entries(attrs).forEach(([k, v]) => { if (v !== undefined && v !== null) node.setAttribute(k, String(v)); });
+  return append(node, children);
+};
+const txt = (x, y, value, extra = {}) => svg("text", { x, y, "font-size": 12, fill: "var(--ink-2)", ...extra }, [value]);
+const chip = (label, kind = "plain", attrs = {}) => el(attrs["data-jump"] ? "button" : "span", { class: `chip ${kind}`, type: attrs["data-jump"] ? "button" : undefined, ...attrs }, [label]);
+const emptyState = (message) => el("div", { class: "empty" }, [message]);
+
+const ring = (pct, color, size, label) => {
+  const r = size / 2 - 8;
+  const c = 2 * Math.PI * r;
+  return svg("svg", { viewBox: `0 0 ${size} ${size}`, width: size, height: size, role: "img", "aria-label": label }, [
+    svg("circle", { cx: size / 2, cy: size / 2, r, fill: "none", stroke: "var(--paper-2)", "stroke-width": 9 }),
+    svg("circle", { cx: size / 2, cy: size / 2, r, fill: "none", stroke: color, "stroke-width": 9, "stroke-linecap": "round",
+      "stroke-dasharray": `${(c * pct) / 100} ${c}`, transform: `rotate(-90 ${size / 2} ${size / 2})` }),
+    svg("text", { x: size / 2, y: size / 2 + size / 14, "text-anchor": "middle", "font-family": "var(--font-mono)", "font-weight": 700, "font-size": size / 4.6, fill: "var(--ink)" }, [`${pct}%`]),
+  ]);
+};
+const arrowMarker = (id, color) => svg("marker", { id, viewBox: "0 0 10 10", refX: 5, refY: 5, markerWidth: 7, markerHeight: 7, orient: "auto-start-reverse" }, [svg("path", { d: "M0,0 L10,5 L0,10 z", fill: color })]);
+
+const pct = (ratio) => Math.round(ratio * 100);
+const wan = (tokens) => `${Number((tokens / 10000).toFixed(tokens % 10000 ? 1 : 0))} 万`;
+/** 名字过长时截断，完整名字放在 <title> 里 */
+const clip = (text, max) => (text.length > max ? `${text.slice(0, max - 1)}…` : text);
+
+/** 读取并索引内嵌数据 */
+const loadData = () => {
+  const data = JSON.parse(document.getElementById("pm-data").textContent);
+  const byId = new Map(data.nodes.map((n) => [n.id, n]));
+  const node = (id) => byId.get(id) || { id, name: id, state: "todo", view: "logical", goals: [], rootBlockers: [] };
+  const depsOf = (id) => data.edges.filter((e) => e.from === id && (e.kind === "hard" || e.kind === "soft"));
+  const dependentsOf = (id) => data.edges.filter((e) => e.to === id && (e.kind === "hard" || e.kind === "soft"));
+  const supportsOf = (id) => data.edges.filter((e) => e.from === id && e.kind !== "hard" && e.kind !== "soft");
+  const supportedBy = (id) => data.edges.filter((e) => e.to === id && e.kind !== "hard" && e.kind !== "soft");
+  return { data, node, depsOf, dependentsOf, supportsOf, supportedBy };
+};
+
+// ---------- ① 架构地图 + 模块详情面板 ----------
+const MAP = { NODE_W: 150, NODE_H: 46, GAP_X: 34, ROW_H: 112, LABEL_W: 96, TOP: 64, MIN_W: 720, NAME_MAX: 9 };
+const LAYER_ORDER = ["front", "service", "data", "external"];
+
+/** 逻辑视图按分层排行；功能 / 物理视图按依赖深度排行（被依赖的在下） */
+const rowsOf = (ctx, view) => {
+  const ids = ctx.data.nodes.filter((n) => n.view === view).map((n) => n.id);
+  if (view === "logical") {
+    return LAYER_ORDER.map((layer) => ({ label: LAYER_LABEL[layer], ids: ids.filter((id) => ctx.node(id).layer === layer) }))
+      .filter((r) => r.ids.length);
+  }
+  const memo = new Map();
+  const level = (id, seen = new Set()) => {
+    if (memo.has(id)) return memo.get(id);
+    if (seen.has(id)) return 0;
+    seen.add(id);
+    const deps = ctx.depsOf(id).map((e) => e.to).filter((d) => ids.includes(d));
+    const value = deps.length ? 1 + Math.max(...deps.map((d) => level(d, seen))) : 0;
+    memo.set(id, value);
+    return value;
+  };
+  const maxLevel = Math.max(0, ...ids.map((id) => level(id)));
+  return Array.from({ length: maxLevel + 1 }, (_, i) => maxLevel - i)
+    .map((lv, i) => ({ label: `第 ${i + 1} 层`, ids: ids.filter((id) => level(id) === lv) }))
+    .filter((r) => r.ids.length);
+};
+
+const layoutOf = (ctx, view) => {
+  const rows = rowsOf(ctx, view);
+  const step = MAP.NODE_W + MAP.GAP_X;
+  const width = Math.max(MAP.MIN_W, MAP.LABEL_W + Math.max(1, ...rows.map((r) => r.ids.length)) * step + 20);
+  const pos = new Map();
+  rows.forEach((row, i) => {
+    const start = MAP.LABEL_W + (width - MAP.LABEL_W - row.ids.length * step) / 2 + step / 2;
+    row.ids.forEach((id, j) => pos.set(id, { x: start + j * step, y: MAP.TOP + i * MAP.ROW_H }));
+  });
+  return { rows, pos, width, height: MAP.TOP + rows.length * MAP.ROW_H - 30 };
+};
+
+const closureWithin = (start, next) => {
+  const seen = new Set();
+  const walk = (id) => { if (seen.has(id)) return; seen.add(id); next(id).forEach(walk); };
+  walk(start);
+  return seen;
+};
+
+const stateIn = (ctx, id, mode) => {
+  const n = ctx.node(id);
+  if (mode === "built") return n.status === "done" ? "ok" : n.status;
+  return n.state;
+};
+
+const edgePath = (a, b) => {
+  const { NODE_W: W, NODE_H: H } = MAP;
+  if (Math.abs(a.y - b.y) < 1) {
+    const dir = b.x > a.x ? 1 : -1;
+    return `M${a.x + (dir * W) / 2},${a.y} L${b.x - dir * (W / 2 + 6)},${b.y}`;
+  }
+  const down = b.y > a.y;
+  const sy = a.y + (down ? H / 2 : -H / 2);
+  const ty = b.y + (down ? -H / 2 - 6 : H / 2 + 6);
+  const my = (sy + ty) / 2;
+  return `M${a.x},${sy} C${a.x},${my} ${b.x},${my} ${b.x},${ty}`;
+};
+
+const drawEdges = (ctx, root, layout, state, focus) => {
+  layout.pos.forEach((from, id) => {
+    ctx.depsOf(id).forEach((e) => {
+      const to = layout.pos.get(e.to);
+      if (!to) return;
+      const broken = state.mode === "effective" && e.kind === "hard" && !ctx.node(e.to).effective;
+      const color = state.mode === "built" || e.kind === "soft" ? "var(--ink-3)" : broken ? "var(--break)" : "var(--ok)";
+      const marker = state.mode === "built" || e.kind === "soft" ? "arrow-muted" : broken ? "arrow-break" : "arrow-ok";
+      root.appendChild(svg("path", {
+        d: edgePath(from, to), fill: "none", stroke: color, "stroke-width": broken ? 2.4 : 2,
+        "stroke-dasharray": e.kind === "soft" ? "2 4" : broken ? "6 5" : null, "marker-end": `url(#${marker})`,
+        class: `${broken ? "pulse" : ""}${focus && !(focus.has(id) && focus.has(e.to)) ? " dim" : ""}`,
+      }));
+    });
+  });
+};
+
+const drawNode = (ctx, root, id, p, state, focus) => {
+  const n = ctx.node(id);
+  const st = stateIn(ctx, id, state.mode);
+  const meta = STATE_META[st];
+  const { NODE_W: W, NODE_H: H } = MAP;
+  root.appendChild(svg("g", {
+    class: `node${focus && !focus.has(id) ? " dim" : ""}`, tabindex: 0, role: "button", "data-id": id, "data-state": st,
+    "aria-label": `${n.name}，${meta.label}`, transform: `translate(${p.x - W / 2},${p.y - H / 2})`,
+  }, [
+    svg("title", {}, [n.name]),
+    id === state.selected ? svg("rect", { x: -6, y: -6, width: W + 12, height: H + 12, rx: 14, fill: "none", stroke: "var(--ink)", "stroke-dasharray": "3 3" }) : null,
+    svg("rect", { class: "body", width: W, height: H, rx: 9, fill: meta.tint, stroke: meta.color, "stroke-width": 2.2, "stroke-dasharray": meta.dashed ? "6 4" : null }),
+    svg("rect", { width: 8, height: H, rx: 4, fill: meta.color, opacity: meta.dashed ? 0.4 : 1 }),
+    txt(W / 2 + 4, H / 2 + 5, clip(n.name, MAP.NAME_MAX), { "text-anchor": "middle", "font-size": 14, "font-weight": 700, fill: "var(--ink)" }),
+    state.mode === "effective" && n.crossViewBlocked ? svg("g", { transform: `translate(${W - 6},-6)` }, [
+      svg("circle", { r: 10, fill: "var(--break)" }), txt(0, 4, "⇡", { "text-anchor": "middle", fill: "#fff", "font-weight": 900 }),
+    ]) : null,
+    n.pendingReview ? svg("g", { transform: "translate(6,-6)" }, [
+      svg("rect", { x: -7, y: -7, width: 14, height: 14, transform: "rotate(45)", fill: "var(--doing)" }),
+    ]) : null,
+  ]));
+};
+
+const renderMap = (ctx, state) => {
+  const root = document.getElementById("map-svg");
+  const layout = layoutOf(ctx, state.view);
+  root.replaceChildren();
+  root.setAttribute("viewBox", `0 0 ${layout.width} ${Math.max(layout.height, 140)}`);
+  root.style.minWidth = `${Math.min(layout.width, 900)}px`;
+  const inView = state.selected && layout.pos.has(state.selected);
+  const focus = inView ? new Set([
+    ...closureWithin(state.selected, (x) => ctx.depsOf(x).map((e) => e.to)),
+    ...closureWithin(state.selected, (x) => ctx.dependentsOf(x).map((e) => e.from)),
+  ]) : null;
+  root.appendChild(svg("defs", {}, [arrowMarker("arrow-ok", "var(--ok)"), arrowMarker("arrow-break", "var(--break)"), arrowMarker("arrow-muted", "var(--ink-3)")]));
+  layout.rows.forEach((row, i) => {
+    const y = MAP.TOP + i * MAP.ROW_H;
+    root.appendChild(svg("rect", { x: 0, y: y - 50, width: layout.width, height: 100, rx: 10, fill: i % 2 ? "transparent" : "var(--paper-2)", opacity: 0.55 }));
+    root.appendChild(txt(16, y + 5, row.label, { "font-weight": 700, fill: "var(--ink-3)", "font-size": 13 }));
+  });
+  if (!layout.rows.length) root.appendChild(txt(layout.width / 2, 80, `${VIEW_LABEL[state.view]}视图还没有节点`, { "text-anchor": "middle", fill: "var(--ink-3)" }));
+  drawEdges(ctx, root, layout, state, focus);
+  layout.pos.forEach((p, id) => drawNode(ctx, root, id, p, state, focus));
+  document.querySelectorAll("[data-view]").forEach((b) => b.setAttribute("aria-pressed", String(b.getAttribute("data-view") === state.view)));
+  document.querySelectorAll("[data-mode]").forEach((b) => b.setAttribute("aria-pressed", String(b.getAttribute("data-mode") === state.mode)));
+};
+
+const jumpChips = (ctx, ids, emptyText = "—") => el("div", { class: "chips" },
+  ids.length ? ids.map((id) => chip(`${ctx.node(id).name}${ctx.node(id).view !== "logical" ? `（${VIEW_LABEL[ctx.node(id).view]}）` : ""}`, ctx.node(id).state, { "data-jump": id }))
+    : [el("span", { class: "sub" }, [emptyText])]);
+
+const renderPanel = (ctx, state) => {
+  const root = document.getElementById("panel");
+  if (!state.selected) {
+    root.replaceChildren(el("h3", {}, ["点击一个模块"]), el("p", { class: "sub" }, ["查看它的依赖、跨视图映射、根因阻塞、所属目标与成本。"]));
+    return;
+  }
+  const n = ctx.node(state.selected);
+  const where = `${VIEW_LABEL[n.view]}视图${n.layer ? ` · ${LAYER_LABEL[n.layer]}` : ""}`;
+  const row = (label, content) => [el("dt", {}, [label]), el("dd", {}, [content])];
+  root.replaceChildren(
+    el("div", {}, [el("div", { class: "eyebrow" }, [where]), el("h3", {}, [n.name])]),
+    el("div", { class: "chips" }, [
+      chip(STATE_META[n.state].label, n.state),
+      n.crossViewBlocked ? chip("跨视图阻塞", "blocked") : null,
+      n.pendingReview ? chip("待复核", "doing") : null,
+    ]),
+    el("dl", { class: "kv" }, [
+      ...row("依赖", jumpChips(ctx, ctx.depsOf(n.id).map((e) => e.to))),
+      ...row("被依赖", jumpChips(ctx, ctx.dependentsOf(n.id).map((e) => e.from))),
+      ...row("支撑于", jumpChips(ctx, ctx.supportsOf(n.id).map((e) => e.to))),
+      ...row("支撑了", jumpChips(ctx, ctx.supportedBy(n.id).map((e) => e.from))),
+      ...row("目标", el("div", { class: "chips" }, n.goals.length ? n.goals.map((g) => chip(g)) : [el("span", { class: "sub" }, ["—"])])),
+      ...row("成本", el("span", { class: "mono" }, [n.tokens ? `${wan(n.tokens)} token · ${n.days.toFixed(1)} 天` : "—"])),
+    ]),
+    n.rootBlockers.length
+      ? el("div", { class: "callout" }, [el("b", {}, ["根因阻塞："]), jumpChips(ctx, n.rootBlockers)])
+      : el("div", { class: "callout good" }, [n.effective ? "已生效，上游链路畅通。" : "上游没有阻塞，完成自身验收即可生效。"]),
+  );
+};
+
+// ---------- ② 依赖与阻塞：哪些未完成模块卡住了最多已写好的模块 ----------
+// 卡住同一组模块的根因（通常是一条链）合并成一行，避免重复
+const VIEW_DEPTH = { physical: 0, logical: 1, functional: 2 };
+
+const groupRoots = (ctx) => {
+  const tally = new Map();
+  ctx.data.nodes.filter((n) => n.state === "blocked").forEach((n) =>
+    n.rootBlockers.forEach((b) => tally.set(b, [...(tally.get(b) || []), n.id])));
+  const groups = new Map();
+  tally.forEach((blocked, root) => {
+    const key = [...blocked].sort().join("|");
+    groups.set(key, { blocked, roots: [...((groups.get(key) || {}).roots || []), root] });
+  });
+  return [...groups.values()]
+    .map((g) => ({ ...g, roots: g.roots.sort((a, b) => VIEW_DEPTH[ctx.node(a).view] - VIEW_DEPTH[ctx.node(b).view] || a.localeCompare(b)) }))
+    .sort((a, b) => b.blocked.length - a.blocked.length);
+};
+
+const renderBlockers = (ctx) => {
+  const root = document.getElementById("blockers");
+  const groups = groupRoots(ctx);
+  if (!groups.length) {
+    root.replaceChildren(emptyState("没有被卡住的模块：已写好的模块都已生效。"));
+    return;
+  }
+  const max = Math.max(...groups.map((g) => g.blocked.length));
+  root.replaceChildren(...groups.map((g, i) => el("div", { class: "block-row" }, [
+    el("div", {}, [el("div", { class: "row-label" }, [g.roots.length > 1 ? "根因链（先做左边）" : "根因"]), jumpChips(ctx, g.roots)]),
+    el("div", {}, [
+      svg("svg", { viewBox: "0 0 300 20", preserveAspectRatio: "none", style: "width:100%;height:20px", role: "img", "aria-label": `卡住 ${g.blocked.length} 个模块` }, [
+        svg("rect", { width: 300, height: 20, rx: 5, fill: "var(--paper-2)" }),
+        svg("rect", { width: (300 * g.blocked.length) / max, height: 20, rx: 5, fill: i === 0 ? "var(--break)" : "var(--blocked)" }),
+      ]),
+      el("div", { class: "row-label", style: "margin-top:6px" }, [`卡住 ${g.blocked.length} 个已写好的模块`]),
+      jumpChips(ctx, g.blocked),
+    ]),
+  ])));
+};
+
+// ---------- ③ 目标缺口、下一步推荐、What-if ----------
+const REC_LIMIT = 8;
+const goalColor = (p) => (p === 100 ? "var(--ok)" : p >= 40 ? "var(--blocked)" : "var(--break)");
+
+const renderGoals = (ctx) => {
+  const root = document.getElementById("goals");
+  if (!ctx.data.goals.length) {
+    root.replaceChildren(el("div", { class: "card" }, [emptyState("还没有目标：在 pm.yaml 的 goals 下声明目标需要哪些节点。")]));
+    return;
+  }
+  const row = (label, ids) => el("div", {}, [el("div", { class: "row-label" }, [label]), jumpChips(ctx, ids, "无")]);
+  root.replaceChildren(...ctx.data.goals.map((g) => {
+    const p = pct(g.ratio);
+    return el("article", { class: "card goal-card" }, [
+      el("div", { class: "goal-top" }, [
+        ring(p, goalColor(p), 84, `${g.id} 生效进度`),
+        el("div", {}, [el("div", { class: "eyebrow" }, [`${g.id} · ${g.effectiveCount}/${g.total} 生效`]), el("h3", {}, [g.name])]),
+      ]),
+      row("还要建", g.toBuild),
+      row("已建但被卡住", g.blocked),
+    ]);
+  }));
+};
+
+const deltaText = (d) => `${d.goal} ${pct(d.before)}% → ${pct(d.after)}%`;
+
+const renderRecs = (ctx) => {
+  const root = document.getElementById("recs");
+  const recs = ctx.data.recommendations.slice(0, REC_LIMIT);
+  const head = el("div", {}, [el("h3", { style: "margin:0" }, ["下一步推荐"]), el("p", { class: "sub" }, ["条长 = 杠杆（每完成一个节点带来的目标提升）。计划包含让它生效还缺的全部节点。"])]);
+  if (!recs.length) {
+    root.replaceChildren(head, emptyState(ctx.data.goals.length ? "所有目标都已达成，或剩下的模块不影响任何目标。" : "先声明目标，才能给出推荐。"));
+    return;
+  }
+  const max = Math.max(...recs.map((r) => r.leverage), Number.EPSILON);
+  root.replaceChildren(head, ...recs.map((r, i) => el("div", { class: "rec-row" }, [
+    el("button", { class: "rec-name chip plain", type: "button", "data-jump": r.target, style: "border:0;text-align:left;padding:0;white-space:normal" }, [`${i + 1}. ${ctx.node(r.target).name}`]),
+    svg("svg", { viewBox: "0 0 300 20", preserveAspectRatio: "none", style: "width:100%;height:20px", role: "img", "aria-label": `杠杆 ${r.leverage.toFixed(1)}` }, [
+      svg("rect", { width: 300, height: 20, rx: 5, fill: "var(--paper-2)" }),
+      svg("rect", { width: (300 * r.leverage) / max, height: 20, rx: 5, fill: i === 0 ? "var(--ink)" : "var(--ok)" }),
+    ]),
+    el("div", { class: "rec-meta" }, [`+${r.gain.toFixed(1)} 个百分点（${r.goalDeltas.map(deltaText).join("；")}）· 计划 ${r.plan.length} 个 · 解锁 ${r.unblocked.length} 个`]),
+    el("div", { class: "rec-meta" }, [jumpChips(ctx, r.plan)]),
+  ])));
+};
+
+const renderWhatIf = (ctx) => {
+  const root = document.getElementById("whatif");
+  const top = ctx.data.recommendations[0];
+  if (!top) {
+    root.replaceChildren(el("h3", {}, ["What-if"]), el("p", {}, ["暂无可推演的下一步。"]));
+    return;
+  }
+  const W = 300, BAR_H = 22, ROW = 54;
+  const bars = svg("svg", { viewBox: `0 0 ${W} ${top.goalDeltas.length * ROW + 6}`, style: "width:100%;height:auto", role: "img", "aria-label": "完成后的目标变化" });
+  top.goalDeltas.forEach((d, i) => {
+    const y = 20 + i * ROW;
+    bars.appendChild(txt(0, y - 6, d.goal, { fill: "currentColor", "font-weight": 900 }));
+    bars.appendChild(svg("rect", { x: 0, y, width: W, height: BAR_H, rx: 11, fill: "rgba(255,255,255,.14)" }));
+    bars.appendChild(svg("rect", { x: 0, y, width: W * d.after, height: BAR_H, rx: 11, fill: "var(--ok)" }));
+    bars.appendChild(svg("rect", { x: 0, y, width: W * d.before, height: BAR_H, rx: 11, fill: "var(--blocked)" }));
+    bars.appendChild(txt(W, y - 6, `${pct(d.before)}% → ${pct(d.after)}%`, { "text-anchor": "end", fill: "currentColor", "font-family": "var(--font-mono)", "font-weight": 700 }));
+  });
+  const freed = top.unblocked.filter((id) => ctx.node(id).status === "done");
+  root.replaceChildren(
+    el("div", { class: "eyebrow", style: "color:inherit;opacity:.6" }, ["推荐第一 · What-if"]),
+    el("h3", {}, [top.plan.map((id) => ctx.node(id).name).join(" + ")]),
+    el("p", {}, [freed.length ? `做完后，${freed.length} 个已写好的模块立即生效：${freed.map((id) => ctx.node(id).name).join("、")}。` : `做完后新增 ${top.unblocked.length} 个生效节点。`]),
+    bars,
+  );
+};
+
+// ---------- ④ 成本：时间 × token 气泡图 + 汇总 ----------
+const COST = { X0: 80, X1: 640, Y0: 300, Y1: 24, WIDTH: 680, HEIGHT: 360 };
+const LABEL_GAP = 16;
+const CHAR_W = 12;
+
+/** 取 1/2/5 × 10^n 的整齐上限，便于刻度阅读 */
+const niceCeil = (value) => {
+  if (value <= 0) return 1;
+  const pow = 10 ** Math.floor(Math.log10(value));
+  return [1, 2, 5, 10].map((m) => m * pow).find((v) => v >= value);
+};
+
+const renderCostChart = (ctx, spent) => {
+  const root = document.getElementById("cost-svg");
+  const { X0, X1, Y0, Y1 } = COST;
+  const stuckDays = ctx.data.settings.stuckDays;
+  const maxDays = Math.max(Math.ceil(Math.max(...spent.map((n) => n.days))) + 1, stuckDays + 2);
+  const maxTokens = niceCeil(Math.max(...spent.map((n) => n.tokens)) * 1.1);
+  const sx = (d) => X0 + (d / maxDays) * (X1 - X0);
+  const sy = (t) => Y0 - (t / maxTokens) * (Y0 - Y1);
+  const radius = (t) => 8 + Math.sqrt(t / maxTokens) * 26;
+  root.replaceChildren();
+  root.setAttribute("viewBox", `0 0 ${COST.WIDTH} ${COST.HEIGHT}`);
+  root.style.minWidth = "560px";
+  const dayStep = Math.max(1, Math.ceil(maxDays / 8));
+  for (let d = 0; d <= maxDays; d += dayStep) {
+    root.appendChild(svg("line", { x1: sx(d), x2: sx(d), y1: Y1, y2: Y0, stroke: "var(--line)", "stroke-dasharray": "2 4" }));
+    root.appendChild(txt(sx(d), Y0 + 20, `${d}天`, { "text-anchor": "middle", fill: "var(--ink-3)", "font-family": "var(--font-mono)" }));
+  }
+  for (let i = 0; i <= 4; i++) {
+    const t = (maxTokens * i) / 4;
+    root.appendChild(svg("line", { x1: X0, x2: X1, y1: sy(t), y2: sy(t), stroke: "var(--line)", "stroke-dasharray": "2 4" }));
+    root.appendChild(txt(X0 - 10, sy(t) + 4, wan(t), { "text-anchor": "end", fill: "var(--ink-3)", "font-family": "var(--font-mono)" }));
+  }
+  root.appendChild(svg("rect", { x: sx(stuckDays), y: Y1, width: X1 - sx(stuckDays), height: Y0 - Y1, fill: "var(--break)", opacity: 0.06 }));
+  root.appendChild(svg("line", { x1: sx(stuckDays), x2: sx(stuckDays), y1: Y1, y2: Y0, stroke: "var(--break)", "stroke-dasharray": "6 4" }));
+  root.appendChild(txt(sx(stuckDays) + 8, Y0 - 10, `${stuckDays} 天预警线`, { fill: "var(--break)", "font-weight": 700 }));
+  const stuck = new Set(ctx.data.cost.stuck);
+  const placed = [];
+  /** 简单避让：标签与已放置的标签重叠时向上挪 */
+  const labelY = (x1, x2, y) => {
+    let ty = y;
+    while (placed.some((p) => x1 < p.x2 && x2 > p.x1 && Math.abs(ty - p.y) < LABEL_GAP)) ty -= LABEL_GAP;
+    placed.push({ x1, x2, y: ty });
+    return ty;
+  };
+  [...spent].sort((a, b) => b.tokens - a.tokens).forEach((n) => {
+    const meta = STATE_META[n.state];
+    const cx = sx(n.days), cy = sy(n.tokens), r = radius(n.tokens);
+    // 靠右的气泡把标签放在上方，避免压到左边相邻的气泡
+    const above = cx > X1 - 200;
+    const label = `${clip(n.name, 8)}${stuck.has(n.id) ? " · 卡住" : ""}`;
+    const lw = label.length * CHAR_W;
+    const lx = above ? cx : cx + r + 6;
+    const ly = labelY(above ? cx - lw / 2 : lx, above ? cx + lw / 2 : lx + lw, above ? cy - r - 12 : cy + 4);
+    root.appendChild(svg("g", { class: "node", "data-jump": n.id, tabindex: 0, role: "button", "aria-label": `${n.name}：${wan(n.tokens)} token，${n.days.toFixed(1)} 天` }, [
+      svg("title", {}, [n.name]),
+      stuck.has(n.id) ? svg("circle", { cx, cy, r: r + 8, fill: "none", stroke: "var(--break)", "stroke-width": 2, class: "pulse" }) : null,
+      svg("circle", { class: "bubble", cx, cy, r, fill: meta.tint, stroke: meta.color, "stroke-width": 2.4, "stroke-dasharray": meta.dashed ? "5 4" : null }),
+      txt(lx, ly, label, { "text-anchor": above ? "middle" : "start", "font-weight": 700, fill: "var(--ink)" }),
+    ]));
+  });
+  const idle = ctx.data.nodes.filter((n) => !n.tokens).length;
+  root.appendChild(txt(X0, Y0 + 48, `尚未投入的模块：${idle} 个 · 气泡大小 ∝ token`, { fill: "var(--ink-3)" }));
+};
+
+const renderCostSide = (ctx) => {
+  const c = ctx.data.cost;
+  const sunk = pct(c.sunkTokens / c.totalTokens);
+  const states = ["ok", "blocked", "doing"].filter((s) => c.byState[s] > 0);
+  let x = 0;
+  const stacked = svg("svg", { viewBox: "0 0 260 16", preserveAspectRatio: "none", style: "width:100%;height:16px", role: "img", "aria-label": "按状态分布" },
+    states.map((s) => { const w = (c.byState[s] / c.totalTokens) * 260; const r = svg("rect", { x, width: Math.max(w - 2, 0), height: 16, rx: 4, fill: STATE_META[s].color }); x += w; return r; }));
+  const goalRows = ctx.data.goals.map((g) => el("div", { style: "display:grid;grid-template-columns:40px 1fr 60px;gap:8px;align-items:center;font-size:.8rem" }, [
+    el("b", { class: "mono" }, [g.id]),
+    svg("svg", { viewBox: "0 0 100 10", preserveAspectRatio: "none", style: "width:100%;height:10px" }, [
+      svg("rect", { width: 100, height: 10, rx: 3, fill: "var(--paper-2)" }),
+      svg("rect", { width: ((c.byGoal[g.id] || 0) / c.totalTokens) * 100, height: 10, rx: 3, fill: "var(--ink)" }),
+    ]),
+    el("span", { class: "mono", style: "text-align:right" }, [wan(c.byGoal[g.id] || 0)]),
+  ]));
+  document.getElementById("cost-side").replaceChildren(
+    el("div", { class: "kpi-label", style: "margin-top:0" }, ["累计消耗 token"]), el("div", { class: "kpi" }, [wan(c.totalTokens)]),
+    el("div", { style: "display:flex;gap:12px;align-items:center;margin-top:14px" }, [
+      ring(sunk, "var(--blocked)", 80, "沉没成本占比"),
+      el("div", { style: "font-size:.85rem" }, [el("b", {}, ["沉没风险"]), el("br"), `${wan(c.sunkTokens)} 花在未生效的模块上`]),
+    ]),
+    el("div", { class: "kpi-label" }, ["按生效状态"]), stacked,
+    el("div", { class: "chips", style: "margin-top:6px" }, states.map((s) => chip(`${STATE_META[s].label} ${wan(c.byState[s])}`, s))),
+    goalRows.length ? el("div", { class: "kpi-label" }, ["按目标（共享模块重复计入）"]) : null, ...goalRows,
+    c.stuck.length ? el("div", { class: "callout", style: "margin-top:12px" }, [el("b", {}, ["卡住预警："]), jumpChips(ctx, c.stuck)]) : null,
+    c.unassignedTokens ? el("div", { class: "kpi-label" }, [`另有 ${wan(c.unassignedTokens)} token 未归属任何模块（会话里没有先 pm start）`]) : null,
+  );
+};
+
+const renderCost = (ctx) => {
+  const spent = ctx.data.nodes.filter((n) => n.tokens > 0);
+  if (!spent.length) {
+    document.getElementById("cost-body").replaceChildren(el("div", { class: "card" }, [emptyState("还没有成本记录：会话结束时写入 .pm/ledger.jsonl 后，这里会出现气泡图。")]));
+    return;
+  }
+  renderCostChart(ctx, spent);
+  renderCostSide(ctx);
+};
+
+// ---------- ⑤ 旅程蓝图：服务蓝图泳道 + 可用性曲线 + 故事地图切线 ----------
+const BP = { LABEL_W: 120, COL_W: 230, CHIP_W: 150, CHIP_H: 26, CHIP_GAP: 6, LANE_PAD: 18, CURVE_TOP: 20, CURVE_H: 60, USER_H: 70 };
+const BP_LANES = [["front", "前台"], ["back", "后台"], ["support", "支撑系统"]];
+const BP_LINES = ["交互线", "可见线 · 用户看不到以下", "内部交互线"];
+const STEP_STYLE = {
+  ok: { color: "var(--ok)", y: 0, verdict: () => "✓ 可以走通" },
+  broken: { color: "var(--break)", y: 1, verdict: (root) => `✗ 断在：${root}` },
+  gap: { color: "var(--blocked)", y: 0.5, verdict: () => "? 映射缺口：没有实现组件" },
+};
+
+/** 每条泳道的高度按本蓝图里最多的节点数决定 */
+const laneGeometry = (bp) => {
+  let y = BP.CURVE_TOP + BP.CURVE_H + 16;
+  const user = { top: y, bottom: y + BP.USER_H };
+  y = user.bottom + 12;
+  const lanes = BP_LANES.map(([key, label]) => {
+    const count = Math.max(1, ...bp.steps.map((s) => s.lanes[key].length));
+    const height = count * (BP.CHIP_H + BP.CHIP_GAP) + BP.LANE_PAD * 2;
+    const lane = { key, label, top: y, bottom: y + height };
+    y = lane.bottom + 12;
+    return lane;
+  });
+  return { user, lanes, verdictY: y + 18, height: y + 56 };
+};
+
+const drawLaneFrame = (root, geo, width) => {
+  root.appendChild(txt(14, BP.CURVE_TOP + BP.CURVE_H / 2 + 4, "可用性曲线", { "font-weight": 700, fill: "var(--ink-3)" }));
+  [{ ...geo.user, label: "用户行为" }, ...geo.lanes].forEach((l, i) => {
+    root.appendChild(svg("rect", { x: 0, y: l.top, width, height: l.bottom - l.top, rx: 8, fill: i % 2 ? "transparent" : "var(--paper-2)", opacity: 0.55 }));
+    root.appendChild(txt(14, (l.top + l.bottom) / 2 + 5, l.label, { "font-weight": 900, fill: "var(--ink-3)", "font-size": 13 }));
+  });
+  const lineYs = [geo.user.bottom + 6, geo.lanes[0].bottom + 6, geo.lanes[1].bottom + 6];
+  lineYs.forEach((y, i) => {
+    const strong = i === 1;
+    root.appendChild(svg("line", { x1: BP.LABEL_W, x2: width - 10, y1: y, y2: y, stroke: strong ? "var(--ink)" : "var(--ink-3)", "stroke-width": strong ? 2 : 1.2, "stroke-dasharray": strong ? "10 5" : "4 4" }));
+    root.appendChild(txt(BP.LABEL_W + 4, y - 4, BP_LINES[i], { "font-size": 11, "font-weight": strong ? 900 : 500, fill: strong ? "var(--ink)" : "var(--ink-3)" }));
+  });
+};
+
+const drawStep = (ctx, root, step, i, geo) => {
+  const cx = BP.LABEL_W + BP.COL_W * (i + 0.5);
+  const style = STEP_STYLE[step.status];
+  const group = svg("g", { class: "bp-step", "data-step": step.step, opacity: step.slice === "later" ? 0.5 : 1 });
+  const positions = new Map();
+  geo.lanes.forEach((lane) => {
+    const ids = step.lanes[lane.key];
+    const center = (lane.top + lane.bottom) / 2;
+    const total = ids.length * BP.CHIP_H + Math.max(0, ids.length - 1) * BP.CHIP_GAP;
+    ids.forEach((id, j) => positions.set(id, center - total / 2 + BP.CHIP_H / 2 + j * (BP.CHIP_H + BP.CHIP_GAP)));
+    if (step.status === "gap") {
+      group.appendChild(svg("rect", { x: cx - BP.CHIP_W / 2, y: center - BP.CHIP_H / 2, width: BP.CHIP_W, height: BP.CHIP_H, rx: 7, fill: "none", stroke: "var(--blocked)", "stroke-dasharray": "4 4" }));
+      group.appendChild(txt(cx, center + 4, "?", { "text-anchor": "middle", "font-weight": 900, fill: "var(--blocked)" }));
+    }
+  });
+  const userY = (geo.user.top + geo.user.bottom) / 2;
+  if (step.root && positions.has(step.root)) {
+    group.appendChild(svg("line", { x1: cx, x2: cx, y1: positions.get(step.root), y2: userY + 22, stroke: "var(--break)", "stroke-width": 3, class: "pulse" }));
+  }
+  positions.forEach((y, id) => {
+    const n = ctx.node(id);
+    const meta = STATE_META[n.state];
+    group.appendChild(svg("g", { class: "node", "data-jump": id, tabindex: 0, role: "button", "aria-label": `${n.name}，${meta.label}`, transform: `translate(${cx - BP.CHIP_W / 2},${y - BP.CHIP_H / 2})` }, [
+      svg("title", {}, [n.name]),
+      svg("rect", { width: BP.CHIP_W, height: BP.CHIP_H, rx: 7, fill: meta.tint, stroke: meta.color, "stroke-width": 2, "stroke-dasharray": meta.dashed ? "5 4" : null }),
+      txt(BP.CHIP_W / 2, 17, clip(n.name, 10), { "text-anchor": "middle", "font-weight": 700, fill: "var(--ink)" }),
+    ]));
+  });
+  group.appendChild(svg("rect", { x: cx - 80, y: userY - 22, width: 160, height: 44, rx: 10, fill: "var(--ink)" }));
+  group.appendChild(txt(cx, userY + 5, `${i + 1}. ${clip(step.step, 8)}`, { "text-anchor": "middle", "font-size": 14, "font-weight": 900, fill: "var(--card)" }));
+  group.appendChild(txt(cx, geo.verdictY, style.verdict(step.root ? ctx.node(step.root).name : "上游未生效"), { "text-anchor": "middle", "font-weight": 900, fill: style.color, "font-size": 13 }));
+  root.appendChild(group);
+  return { cx, cy: BP.CURVE_TOP + 8 + style.y * (BP.CURVE_H - 16), status: step.status };
+};
+
+const drawCurve = (root, points) => {
+  root.appendChild(svg("path", { d: points.map((p, i) => `${i ? "L" : "M"}${p.cx},${p.cy}`).join(" "), fill: "none", stroke: "var(--ink-3)", "stroke-width": 2 }));
+  points.forEach((p) => {
+    const color = STEP_STYLE[p.status].color;
+    root.appendChild(svg("circle", { cx: p.cx, cy: p.cy, r: 8, fill: p.status === "gap" ? "var(--card)" : color, stroke: color, "stroke-width": 2.5 }));
+  });
+};
+
+const drawSlice = (root, bp, geo, width) => {
+  const first = bp.steps.findIndex((s) => s.slice === "later");
+  if (first < 0) return;
+  const x = BP.LABEL_W + BP.COL_W * first;
+  root.appendChild(svg("line", { x1: x, x2: x, y1: 8, y2: geo.height - 20, stroke: "var(--doing)", "stroke-width": 2, "stroke-dasharray": "8 5" }));
+  root.appendChild(txt(x + 8, 16, "切线 → 以后再做", { "font-size": 11, "font-weight": 700, fill: "var(--doing)" }));
+};
+
+const renderBlueprints = (ctx) => {
+  const root = document.getElementById("blueprints");
+  if (!ctx.data.blueprints.length) {
+    root.replaceChildren(el("div", { class: "card" }, [emptyState("还没有旅程：在目标下写 journey（步骤 → 功能节点）即可生成蓝图。")]));
+    return;
+  }
+  root.replaceChildren(...ctx.data.blueprints.map((bp) => {
+    const goal = ctx.data.goals.find((g) => g.id === bp.goal);
+    const geo = laneGeometry(bp);
+    const width = BP.LABEL_W + bp.steps.length * BP.COL_W + 10;
+    const chart = svg("svg", { class: "bp", viewBox: `0 0 ${width} ${geo.height}`, role: "img", "aria-label": `${bp.goal} 旅程蓝图`, style: `min-width:${Math.min(width, 860)}px` });
+    drawLaneFrame(chart, geo, width);
+    const points = bp.steps.map((s, i) => drawStep(ctx, chart, s, i, geo));
+    drawCurve(chart, points);
+    drawSlice(chart, bp, geo, width);
+    chart.appendChild(txt(width / 2, geo.height - 14, `切线以内 ${bp.summary.inScope} 步，用户目前能走通 ${bp.summary.usable} 步`, { "text-anchor": "middle", "font-weight": 700, fill: "var(--ink)", "font-size": 13 }));
+    return el("div", { class: "card bp-card" }, [el("h3", {}, [`${bp.goal} · ${goal ? goal.name : ""}`]), el("div", { class: "scroll-x" }, [chart])]);
+  }));
+};
+
+// ---------- 入口：页头、交互绑定、逐个视图渲染（单个视图出错不影响其他视图） ----------
+const renderHeader = (ctx) => {
+  const { data } = ctx;
+  document.getElementById("project-name").textContent = data.project;
+  document.getElementById("generated-at").textContent = `生成于 ${new Date(data.generatedAt).toLocaleString("zh-CN")}`;
+  const { total, built, effective } = data.metrics;
+  const ratio = (n) => (total ? pct(n / total) : 0);
+  document.getElementById("metrics").replaceChildren(
+    el("div", { class: "metric" }, [ring(ratio(built), "var(--ink)", 86, "建成度"), el("b", {}, ["建成度"]), `${built}/${total} 已完成`]),
+    el("div", { class: "metric" }, [ring(ratio(effective), "var(--ok)", 86, "生效度"), el("b", {}, ["生效度"]), `${effective}/${total} 真正可用`]),
+  );
+  document.getElementById("warnings").replaceChildren(...data.warnings.map((w) => el("div", { class: "warning" }, [`警告：${w}`])));
+  document.getElementById("legend").replaceChildren(...Object.values(STATE_META).map((m) =>
+    el("span", {}, [el("i", { style: `background:${m.tint};border-color:${m.color};border-style:${m.dashed ? "dashed" : "solid"}` }), m.label])));
+};
+
+const initialView = (ctx) => ["logical", "functional", "physical"].find((v) => ctx.data.nodes.some((n) => n.view === v)) || "logical";
+
+const bindInteractions = (ctx, state) => {
+  const focusNode = (id) => {
+    const target = [...document.querySelectorAll("#map-svg g.node")].find((g) => g.getAttribute("data-id") === id);
+    if (target) target.focus({ preventScroll: true });
+  };
+  /** 重绘会替换节点，键盘焦点要找回原来的节点 */
+  const redraw = () => {
+    const active = document.activeElement;
+    const focusedId = active && active.closest && active.closest("#map-svg") ? active.getAttribute("data-id") : null;
+    renderMap(ctx, state);
+    renderPanel(ctx, state);
+    if (focusedId) focusNode(focusedId);
+  };
+  const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const select = (id) => {
+    state.view = ctx.node(id).view;
+    state.selected = id;
+    redraw();
+    document.getElementById("map-section").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+    focusNode(id);
+  };
+  document.querySelectorAll("[data-view]").forEach((b) => b.addEventListener("click", () => { state.view = b.getAttribute("data-view"); redraw(); }));
+  document.querySelectorAll("[data-mode]").forEach((b) => b.addEventListener("click", () => { state.mode = b.getAttribute("data-mode"); redraw(); }));
+  const mapSvg = document.getElementById("map-svg");
+  const pickOnMap = (target) => {
+    const g = target.closest && target.closest("g.node[data-id]");
+    const id = g ? g.getAttribute("data-id") : null;
+    state.selected = id && id !== state.selected ? id : null;
+    redraw();
+  };
+  mapSvg.addEventListener("click", (e) => pickOnMap(e.target));
+  const activate = (e) => {
+    const jump = e.target.closest && e.target.closest("[data-jump]");
+    if (jump) { e.preventDefault(); select(jump.getAttribute("data-jump")); return; }
+    if (e.type === "keydown" && mapSvg.contains(e.target)) { e.preventDefault(); pickOnMap(e.target); }
+  };
+  document.addEventListener("click", (e) => { if (!mapSvg.contains(e.target)) activate(e); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") activate(e); });
+};
+
+const reportError = (name, error) => {
+  const note = el("p", { class: "render-error" }, [`视图渲染出错（${name}）：${error && error.message ? error.message : String(error)}`]);
+  document.querySelector("main").prepend(note);
+  console.error(error);
+};
+
+const boot = () => {
+  let ctx;
+  try {
+    ctx = loadData();
+  } catch (error) {
+    reportError("数据", error);
+    return;
+  }
+  const state = { view: initialView(ctx), mode: "effective", selected: null };
+  const steps = [
+    ["页头", () => renderHeader(ctx)],
+    ["架构地图", () => { renderMap(ctx, state); renderPanel(ctx, state); bindInteractions(ctx, state); }],
+    ["依赖与阻塞", () => renderBlockers(ctx)],
+    ["目标", () => renderGoals(ctx)],
+    ["下一步", () => { renderRecs(ctx); renderWhatIf(ctx); }],
+    ["成本", () => renderCost(ctx)],
+    ["旅程蓝图", () => renderBlueprints(ctx)],
+  ];
+  steps.forEach(([name, run]) => { try { run(); } catch (error) { reportError(name, error); } });
+};
+
+boot();
+
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+{
+  "f-login": { "passed": 2, "total": 2 },
+  "f-upload": { "passed": 0, "total": 3 },
+  "f-ask": { "passed": 1, "total": 4 },
+  "login": { "passed": 3, "total": 3 },
+  "chatui": { "passed": 4, "total": 4 },
+  "kb": { "passed": 3, "total": 5 },
+  "auth": { "passed": 2, "total": 2, "pendingReview": true },
+  "chatsvc": { "passed": 5, "total": 5 },
+  "parse": { "passed": 3, "total": 3 },
+  "userdb": { "passed": 1, "total": 1 },
+  "oss": { "passed": 1, "total": 1 },
+  "llm": { "passed": 2, "total": 2 },
+  "p-pg": { "passed": 1, "total": 1 },
+  "p-s3": { "passed": 1, "total": 1 },
+  "p-app-1": { "passed": 1, "total": 1 },
+  "p-app-2": { "passed": 0, "total": 1 }
+}

@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>P1 项目地图页面</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/concept.css">
+<style>
+.pad { padding: 20px; }
+.scroll-x { overflow-x: auto; }
+.scroll-x svg { min-width: 780px; }
+.wide-svg { width: 100%; height: auto; display: block; }
+.live { padding: 0; overflow: hidden; }
+.live-bar { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: var(--ink); color: var(--card); font: 500 .8rem var(--font-mono); }
+.live-bar i { width: 10px; height: 10px; border-radius: 50%; background: var(--card); opacity: .35; display: inline-block; }
+.live-bar a { color: var(--card); margin-left: auto; }
+.live iframe { width: 100%; height: 760px; border: 0; display: block; background: var(--paper); }
+.cmd { font: 500 .82rem var(--font-mono); background: var(--paper-2); border-radius: 6px; padding: 2px 8px; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 900px) { .two { grid-template-columns: 1fr; } .live iframe { height: 600px; } }
+</style>
+</head>
+<body>
+<main>
+
+<header class="hero">
+  <div>
+    <div class="eyebrow">P1 · Dashboard</div>
+    <h1>一条命令，<br>得到一张<em>离线</em>项目地图</h1>
+    <p class="lead">运行 <span class="cmd">npm run pm -- dashboard</span>，读取 .pm/ 下的三份输入，生成单文件 dashboard.html：五个视图、可交互、不联网、双击即开。</p>
+  </div>
+  <figure class="hero-chart" style="margin:0"><svg id="file-svg" class="wide-svg" viewBox="0 0 520 300" role="img" aria-label="单文件的组成"></svg></figure>
+</header>
+
+<section aria-labelledby="q1">
+  <div class="sec-head">
+    <span class="sec-num">01</span><h2 id="q1">真实生成的页面</h2>
+    <p class="sub">下面就是用示例项目生成的 dashboard.html，可以直接操作：切换视图、点击模块、跳转。</p>
+  </div>
+  <div class="card live">
+    <div class="live-bar"><i></i><i></i><i></i><span>examples/kb-demo/.pm/dashboard.html</span><a href="assets/demo-dashboard.html" target="_blank" rel="noopener">新窗口打开 ↗</a></div>
+    <iframe src="assets/demo-dashboard.html" title="示例项目地图" loading="lazy"></iframe>
+  </div>
+</section>
+
+<section aria-labelledby="q2">
+  <div class="sec-head">
+    <span class="sec-num">02</span><h2 id="q2">从 .pm/ 到页面</h2>
+    <p class="sub">CLI 只做读取与写出；计算全在 P0 引擎里；渲染器负责拼装与转义。</p>
+  </div>
+  <div class="card pad scroll-x"><svg id="flow-svg" class="wide-svg" viewBox="0 0 1000 260" role="img" aria-label="生成流程"></svg></div>
+</section>
+
+<section aria-labelledby="q3">
+  <div class="sec-head">
+    <span class="sec-num">03</span><h2 id="q3">页面里的五个视图</h2>
+    <p class="sub">从上到下依次展开；任何视图出错只影响它自己。</p>
+  </div>
+  <div class="card pad scroll-x"><svg id="anatomy-svg" class="wide-svg" viewBox="0 0 1000 330" role="img" aria-label="页面结构"></svg></div>
+</section>
+
+<section aria-labelledby="q4">
+  <div class="sec-head">
+    <span class="sec-num">04</span><h2 id="q4">不可信的名字，只会显示成文字</h2>
+    <p class="sub">pm.yaml 可能由 AI 或第三方写入。一个恶意名字要经过三道关，最终只会以文字形式出现。</p>
+  </div>
+  <div class="card pad scroll-x"><svg id="sec-svg" class="wide-svg" viewBox="0 0 1000 220" role="img" aria-label="安全转义链路"></svg></div>
+</section>
+
+<section aria-labelledby="q5">
+  <div class="sec-head"><span class="sec-num">05</span><h2 id="q5">测试</h2><p class="sub">76 个测试全部通过；P1 新增 23 个，其中 7 个在无头 DOM 里真正执行页面脚本。</p></div>
+  <div class="two">
+    <div class="card pad"><svg id="tests-svg" class="wide-svg" viewBox="0 0 460 260" role="img" aria-label="测试分布"></svg></div>
+    <div class="card pad"><svg id="exit-svg" class="wide-svg" viewBox="0 0 460 260" role="img" aria-label="CLI 退出码"></svg></div>
+  </div>
+</section>
+
+<footer>文字底稿见 p1-dashboard.md · 引擎见 <a href="p0-engine.html">p0-engine.html</a> · 方法论见 <a href="concept.html">concept.html</a></footer>
+</main>
+
+<script src="assets/pm-core.js"></script>
+<script src="assets/p1.js"></script>
+<script>
+  (window.PM_RENDERERS || []).forEach((render) => {
+    try { render(); } catch (err) {
+      const note = document.createElement("p");
+      note.className = "callout";
+      note.textContent = `页面渲染出错（${render.name}）：${err.message}`;
+      document.querySelector("main").prepend(note);
+      console.error(err);
+    }
+  });
+</script>
+</body>
+</html>

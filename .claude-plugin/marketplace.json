@@ -1,0 +1,14 @@
+{
+  "name": "ai-pm-local",
+  "description": "ai-pm 本地开发用的插件市场",
+  "owner": {
+    "name": "ai-pm"
+  },
+  "plugins": [
+    {
+      "name": "ai-pm",
+      "source": "./plugin",
+      "description": "AI 编码时代的图形化项目管理：架构地图、验收驱动的生效判断、目标缺口与下一步"
+    }
+  ]
+}
