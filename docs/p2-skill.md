@@ -21,14 +21,14 @@
 npm run build:plugin
 ```
 
-在 Claude Code 里添加本地插件市场并安装：
+在 Claude Code 里添加本地插件市场并安装（这里假设源码在 `~/ai-pm`）：
 
 ```bash
-claude plugin marketplace add /Users/xingmingwang/Claudecode-projects/Ai-project-Management
+claude plugin marketplace add ~/ai-pm
 ```
 
 ```bash
-claude plugin install ai-pm@ai-pm-local
+claude plugin install ai-pm@ai-pm
 ```
 
 之后在任何项目里新开会话即可生效。改了插件代码，需要重新 `npm run build:plugin`，再在会话里运行 `/reload-plugins`。

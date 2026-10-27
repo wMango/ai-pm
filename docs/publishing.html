@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>定位与发布</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/concept.css">
+<style>
+.pad { padding: 22px; }
+.scroll-x { overflow-x: auto; }
+.wide-svg { width: 100%; height: auto; display: block; }
+.scroll-x .wide-svg { min-width: 760px; }
+svg text { font-family: var(--font-sans); }
+svg .mono { font-family: var(--font-mono); }
+.pitch { padding: 26px 28px; display: grid; gap: 14px; }
+.pitch blockquote { margin: 0; font-size: clamp(1.1rem, 1rem + .6vw, 1.45rem); font-weight: 900; line-height: 1.45; }
+.pitch p { margin: 0; color: var(--ink-2); font-size: .92rem; max-width: 52em; }
+.nots { display: flex; gap: 8px; flex-wrap: wrap; }
+.nots span { font-size: .8rem; padding: 3px 11px; border-radius: 999px; border: 1.5px dashed var(--ink-3); color: var(--ink-2); text-decoration: line-through; text-decoration-color: var(--break); }
+.channels { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.channel { padding: 20px; display: flex; flex-direction: column; gap: 10px; position: relative; }
+.channel .rank { font: 900 2.4rem/1 var(--font-mono); color: var(--line); position: absolute; right: 16px; top: 12px; }
+.channel h3 { margin: 0; font-size: 1.05rem; padding-right: 2.4em; }
+.channel p { margin: 0; font-size: .82rem; color: var(--ink-2); }
+.channel code { display: block; font: 500 .74rem var(--font-mono); background: var(--paper-2); border-radius: 6px; padding: 7px 10px; overflow-wrap: anywhere; }
+.channel.main { outline: 2.5px solid var(--ok); }
+.channel.later { opacity: .72; border: 1.5px dashed var(--ink-3); box-shadow: none; background: transparent; }
+.checklist { display: grid; grid-template-columns: 220px 1fr; gap: 24px; align-items: center; }
+.checks { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.checks li { display: grid; grid-template-columns: 26px 1fr auto; gap: 10px; align-items: baseline; font-size: .88rem; padding: 8px 0; border-bottom: 1px dashed var(--line); }
+.checks li:last-child { border-bottom: 0; }
+.checks .dot { width: 14px; height: 14px; border-radius: 50%; border: 3px solid; align-self: center; }
+.checks .todo .dot { border-color: var(--break); }
+.checks .warn .dot { border-color: var(--blocked); background: var(--blocked-tint); }
+.checks .done .dot { border-color: var(--ok); background: var(--ok); }
+.checks .done span { color: var(--ink-2); }
+.checks small { color: var(--ink-3); font-size: .76rem; }
+.risk { border-left: 4px solid var(--blocked); background: var(--blocked-tint); padding: 12px 16px; border-radius: 0 10px 10px 0; font-size: .88rem; margin-top: 14px; }
+@media (max-width: 960px) { .channels { grid-template-columns: repeat(2, 1fr); } .checklist { grid-template-columns: 1fr; } }
+@media (max-width: 600px) { .channels { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main>
+
+<header class="hero">
+  <div>
+    <div class="eyebrow">ai-pm · 定位与发布</div>
+    <h1>一个装进 <em>AI 代理</em><br>的项目管理插件</h1>
+    <p class="lead">品类是<b>代理插件</b>：技能、钩子、斜杠命令，加上随插件安装的命令行 <span class="mono">pm</span> 和一张离线的项目地图。仓库本身就是插件市场，推到 GitHub 就是发布。</p>
+  </div>
+  <figure class="hero-chart" style="margin:0">
+    <svg class="wide-svg" viewBox="0 0 520 330" role="img" aria-label="四个代理平台通过插件或 pm setup 接入 ai-pm，数据留在用户仓库的 .pm 目录">
+      <defs>
+        <marker id="pa" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--ok)"/></marker>
+        <marker id="pb" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--doing)"/></marker>
+      </defs>
+      <!-- 左：四个平台 -->
+      <g font-size="13" font-weight="700">
+        <rect x="10" y="30" width="118" height="40" rx="10" fill="var(--ok-tint)" stroke="var(--ok)" stroke-width="2"/>
+        <text x="69" y="55" text-anchor="middle" fill="var(--ink)">Claude Code</text>
+        <rect x="10" y="98" width="118" height="40" rx="10" fill="var(--ok-tint)" stroke="var(--ok)" stroke-width="2"/>
+        <text x="69" y="123" text-anchor="middle" fill="var(--ink)">Codex</text>
+        <rect x="10" y="190" width="118" height="40" rx="10" fill="var(--doing-tint)" stroke="var(--doing)" stroke-width="2" stroke-dasharray="6 4"/>
+        <text x="69" y="215" text-anchor="middle" fill="var(--ink)">OpenCode</text>
+        <rect x="10" y="258" width="118" height="40" rx="10" fill="var(--doing-tint)" stroke="var(--doing)" stroke-width="2" stroke-dasharray="6 4"/>
+        <text x="69" y="283" text-anchor="middle" fill="var(--ink)">DeepSeek</text>
+      </g>
+      <path d="M128,50 C160,50 160,110 190,110" fill="none" stroke="var(--ok)" stroke-width="2.5" marker-end="url(#pa)"/>
+      <path d="M128,118 C160,118 160,130 190,130" fill="none" stroke="var(--ok)" stroke-width="2.5" marker-end="url(#pa)"/>
+      <path d="M128,210 C160,210 160,200 190,200" fill="none" stroke="var(--doing)" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#pb)"/>
+      <path d="M128,278 C160,278 160,220 190,220" fill="none" stroke="var(--doing)" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#pb)"/>
+      <text x="158" y="84" text-anchor="middle" font-size="10" fill="var(--ok)" font-weight="700">插件</text>
+      <text x="158" y="250" text-anchor="middle" font-size="10" fill="var(--doing)" font-weight="700">pm setup</text>
+      <!-- 中：插件包 -->
+      <rect x="192" y="40" width="176" height="250" rx="16" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/>
+      <text x="280" y="66" text-anchor="middle" font-size="15" font-weight="900" fill="var(--ink)">ai-pm 插件</text>
+      <g font-size="12">
+        <rect x="208" y="80" width="144" height="56" rx="9" fill="var(--paper-2)"/>
+        <text x="280" y="102" text-anchor="middle" font-weight="700" fill="var(--ink)">技能 · 钩子</text>
+        <text x="280" y="122" text-anchor="middle" class="mono" fill="var(--ink-2)">/pm-map</text>
+        <rect x="208" y="146" width="144" height="56" rx="9" fill="var(--paper-2)"/>
+        <text x="280" y="168" text-anchor="middle" font-weight="700" fill="var(--ink)">命令行 pm</text>
+        <text x="280" y="188" text-anchor="middle" class="mono" fill="var(--ink-2)">bin/pm.mjs</text>
+        <rect x="208" y="212" width="144" height="62" rx="9" fill="var(--ok-tint)" stroke="var(--ok)" stroke-width="1.5"/>
+        <text x="280" y="236" text-anchor="middle" font-weight="700" fill="var(--ink)">项目地图</text>
+        <text x="280" y="256" text-anchor="middle" fill="var(--ink-2)">离线 HTML · 自动更新</text>
+      </g>
+      <!-- 右：用户仓库 -->
+      <path d="M368,165 L404,165" stroke="var(--ink-3)" stroke-width="2" marker-end="url(#pa)"/>
+      <rect x="406" y="100" width="104" height="130" rx="12" fill="var(--paper-2)" stroke="var(--ink-3)" stroke-width="1.5" stroke-dasharray="4 4"/>
+      <text x="458" y="128" text-anchor="middle" font-size="12" font-weight="700" fill="var(--ink)">你的仓库</text>
+      <text x="458" y="152" text-anchor="middle" font-size="14" class="mono" font-weight="700" fill="var(--ink)">.pm/</text>
+      <g transform="translate(446,168)">
+        <rect x="0" y="10" width="24" height="18" rx="3" fill="var(--ink)"/>
+        <path d="M5,10 V6 a7,7 0 0 1 14,0 V10" fill="none" stroke="var(--ink)" stroke-width="3"/>
+      </g>
+      <text x="458" y="216" text-anchor="middle" font-size="10.5" fill="var(--ink-2)">数据不离开本机</text>
+    </svg>
+  </figure>
+</header>
+
+<section aria-labelledby="s1">
+  <div class="sec-head">
+    <span class="sec-num">01</span><h2 id="s1">对外怎么说</h2>
+    <p class="sub">一句话讲清品类和价值；再用"它不是什么"挡掉常见误解。</p>
+  </div>
+  <div class="card pitch">
+    <blockquote>给 AI 编码代理用的项目管理插件——用架构图看进度，用验收测试判断完成，从目标倒推下一步。</blockquote>
+    <p>用 Claude Code、Codex 写代码时，项目会被 AI 迅速放大，任务列表和看板跟不上。ai-pm 把项目画成功能、逻辑、物理三张架构图，只按验收测试判断"做完"，区分"已建成"和"真正生效"，从目标倒推出杠杆最大的下一步，并按提交回看项目的演进。</p>
+    <div class="chips">
+      <span class="chip ok">project-management</span><span class="chip ok">architecture-map</span><span class="chip ok">acceptance-tests</span><span class="chip ok">claude-code</span><span class="chip ok">codex</span><span class="chip ok">agent-plugin</span>
+    </div>
+    <div class="nots" aria-label="它不是什么"><span>云服务</span><span>MCP 服务器</span><span>VS Code 扩展</span><span>常驻后台程序</span></div>
+  </div>
+</section>
+
+<section aria-labelledby="s2">
+  <div class="sec-head">
+    <span class="sec-num">02</span><h2 id="s2">发布到哪里</h2>
+    <p class="sub">按推荐顺序。① 是主渠道：仓库根目录已有 <span class="mono">.claude-plugin/marketplace.json</span>，推送即发布，没有审核。</p>
+  </div>
+  <div class="channels">
+    <article class="card channel main">
+      <span class="rank">1</span>
+      <h3>GitHub 公开仓库</h3>
+      <p>仓库就是插件市场。Claude Code（终端、桌面应用、VS Code）和 Codex 都能直接装。</p>
+      <code>claude plugin marketplace add 组织/仓库</code>
+      <code>claude plugin install ai-pm@ai-pm</code>
+    </article>
+    <article class="card channel">
+      <span class="rank">2</span>
+      <h3>Anthropic 插件目录</h3>
+      <p>在 claude.ai/directory 被搜索到。门户提交，需付费计划；先用 <span class="mono">claude plugin validate --strict</span> 自检。</p>
+      <code>claude.ai/directory/manage</code>
+      <p style="color:var(--blocked)">⚠ 顶层 bin/ 会被 claude.ai 拒装，上架前要挪位置</p>
+    </article>
+    <article class="card channel">
+      <span class="rank">3</span>
+      <h3>Releases + 标签</h3>
+      <p>每次发布打标签、写更新说明；用户可以固定版本。</p>
+      <code>…marketplace add 组织/仓库#v0.3.0</code>
+    </article>
+    <article class="card channel later">
+      <span class="rank">4</span>
+      <h3>npm（以后）</h3>
+      <p>给 OpenCode、DeepSeek Harness 用户省掉 git clone 和构建。需加 <span class="mono">bin</span>、<span class="mono">files</span>，确认包名可用。</p>
+      <code>npx &lt;包名&gt; setup opencode</code>
+    </article>
+  </div>
+</section>
+
+<section aria-labelledby="s3">
+  <div class="sec-head">
+    <span class="sec-num">03</span><h2 id="s3">发布前清单</h2>
+    <p class="sub">绿点已完成，红圈还没做，橙圈视情况而定。现在用户两条命令就能装上。</p>
+  </div>
+  <div class="card pad checklist">
+    <svg viewBox="0 0 200 200" role="img" aria-label="10 项里 8 项已完成" style="width:200px;height:200px;justify-self:center">
+      <circle cx="100" cy="100" r="78" fill="none" stroke="var(--paper-2)" stroke-width="18"/>
+      <circle cx="100" cy="100" r="78" fill="none" stroke="var(--ok)" stroke-width="18" stroke-dasharray="392 490" transform="rotate(-90 100 100)" opacity=".85"/>
+      <circle cx="100" cy="100" r="78" fill="none" stroke="var(--break)" stroke-width="18" stroke-dasharray="49 490" stroke-dashoffset="-392" transform="rotate(-90 100 100)" opacity=".85"/>
+      <circle cx="100" cy="100" r="78" fill="none" stroke="var(--blocked)" stroke-width="18" stroke-dasharray="49 490" stroke-dashoffset="-441" transform="rotate(-90 100 100)" opacity=".85"/>
+      <text x="100" y="96" text-anchor="middle" font-size="40" font-weight="900" class="mono" fill="var(--ink)">8/10</text>
+      <text x="100" y="124" text-anchor="middle" font-size="13" fill="var(--ink-2)">剩 1 必做 · 1 视情况</text>
+    </svg>
+    <div>
+      <ul class="checks">
+        <li class="done"><i class="dot"></i><span>仓库改为公开</span><small>wMango/ai-pm</small></li>
+        <li class="done"><i class="dot"></i><span>选许可证，加 LICENSE，plugin.json 写 license</span><small>MIT</small></li>
+        <li class="done"><i class="dot"></i><span>市场改正式名：ai-pm-local → ai-pm，同步文档里的安装命令</span><small>ai-pm@ai-pm</small></li>
+        <li class="done"><i class="dot"></i><span>plugin.json 补 homepage、repository、author、keywords</span><small>已补齐</small></li>
+        <li class="done"><i class="dot"></i><span>每次发布递增 plugin.json 的 version，marketplace 条目里不写</span><small>当前 0.3.0</small></li>
+        <li class="done"><i class="dot"></i><span>运行 claude plugin validate ./plugin --strict</span><small>已通过</small></li>
+        <li class="done"><i class="dot"></i><span>合并进 main，打标签，写 Release 说明</span><small>v0.3.0</small></li>
+        <li class="todo"><i class="dot"></i><span>换一台机器从零安装、初始化、开工走一遍</span><small>真实验证</small></li>
+        <li class="done"><i class="dot"></i><span>决定本仓库自己的 .pm/ 是否随仓库公开</span><small>公开，作为示例</small></li>
+        <li class="warn"><i class="dot"></i><span>（只为上架目录）把 plugin/bin/ 挪出顶层 bin/</span><small>同步钩子与技能路径</small></li>
+      </ul>
+      <div class="risk"><b>已核实的风险：</b>官方文档说明 claude.ai 和 Cowork 不会安装带顶层 <span class="mono">bin/</span> 的插件。终端版和桌面应用的 Code 标签页不受影响；只在上架 Anthropic 目录时需要处理。审核标准与时长尚未核实。</div>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="s4">
+  <div class="sec-head">
+    <span class="sec-num">04</span><h2 id="s4">发布之后，用户怎么更新</h2>
+    <p class="sub">只有版本号变了，用户才会拿到新版本；第三方市场默认不自动更新。</p>
+  </div>
+  <div class="card pad scroll-x">
+    <svg class="wide-svg" viewBox="0 0 1000 170" role="img" aria-label="发布者递增版本并推送，用户刷新市场、更新插件、新开会话生效">
+      <defs><marker id="pc" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--ink)"/></marker></defs>
+      <text x="20" y="28" font-size="12" font-weight="700" fill="var(--ink-3)">发布者</text>
+      <text x="520" y="28" font-size="12" font-weight="700" fill="var(--ink-3)">用户</text>
+      <line x1="500" y1="18" x2="500" y2="160" stroke="var(--line)" stroke-dasharray="4 4"/>
+      <g font-size="13">
+        <rect x="20" y="50" width="210" height="80" rx="12" fill="var(--paper-2)"/>
+        <text x="125" y="84" text-anchor="middle" font-weight="900" fill="var(--ink)">递增 version</text>
+        <text x="125" y="108" text-anchor="middle" class="mono" fill="var(--ink-2)">plugin.json 0.2.0 → 0.3.0</text>
+        <rect x="270" y="50" width="200" height="80" rx="12" fill="var(--paper-2)"/>
+        <text x="370" y="84" text-anchor="middle" font-weight="900" fill="var(--ink)">推送 + 打标签</text>
+        <text x="370" y="108" text-anchor="middle" class="mono" fill="var(--ink-2)">git push · v0.3.0</text>
+        <rect x="520" y="50" width="140" height="80" rx="12" fill="var(--doing-tint)" stroke="var(--doing)" stroke-width="1.5"/>
+        <text x="590" y="84" text-anchor="middle" font-weight="900" fill="var(--ink)">刷新市场</text>
+        <text x="590" y="108" text-anchor="middle" class="mono" font-size="11" fill="var(--ink-2)">marketplace update</text>
+        <rect x="690" y="50" width="140" height="80" rx="12" fill="var(--doing-tint)" stroke="var(--doing)" stroke-width="1.5"/>
+        <text x="760" y="84" text-anchor="middle" font-weight="900" fill="var(--ink)">更新插件</text>
+        <text x="760" y="108" text-anchor="middle" class="mono" font-size="11" fill="var(--ink-2)">plugin update</text>
+        <rect x="860" y="50" width="120" height="80" rx="12" fill="var(--ok-tint)" stroke="var(--ok)" stroke-width="1.5"/>
+        <text x="920" y="84" text-anchor="middle" font-weight="900" fill="var(--ink)">新会话生效</text>
+        <text x="920" y="108" text-anchor="middle" class="mono" font-size="11" fill="var(--ink-2)">/reload-plugins</text>
+      </g>
+      <g stroke="var(--ink)" stroke-width="2" marker-end="url(#pc)">
+        <line x1="230" y1="90" x2="266" y2="90"/><line x1="470" y1="90" x2="516" y2="90"/><line x1="660" y1="90" x2="686" y2="90"/><line x1="830" y1="90" x2="856" y2="90"/>
+      </g>
+      <text x="750" y="158" text-anchor="middle" font-size="11.5" fill="var(--ink-3)">也可以在 /plugin → Installed 里点 Update now；在 Marketplaces 里打开 Enable auto-update</text>
+    </svg>
+  </div>
+</section>
+
+<footer>文字版见 publishing.md · 安装细节见 <a href="platforms.html">多平台安装与使用</a> · 总览见 <a href="index.html">文档首页</a></footer>
+</main>
+</body>
+</html>

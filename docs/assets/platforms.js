@@ -81,10 +81,10 @@
   };
 
   const CARDS = [
-    { p: 0, cmds: ["claude plugin marketplace add MiniBotFactory/ai-projects-management", "claude plugin install ai-pm@ai-pm-local"],
+    { p: 0, cmds: ["claude plugin marketplace add wMango/ai-pm", "claude plugin install ai-pm@ai-pm"],
       how: "新开会话，直接说\"帮我初始化项目地图\"\"下一步做什么\"。",
       notes: ["三个钩子自动工作：注入摘要、记 token、后台验收", "也可以用 DeepSeek 模型：ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic"] },
-    { p: 1, cmds: ["codex plugin marketplace add MiniBotFactory/ai-projects-management", "codex plugin add ai-pm@ai-pm-local"],
+    { p: 1, cmds: ["codex plugin marketplace add wMango/ai-pm", "codex plugin add ai-pm@ai-pm"],
       how: "新开会话，先在 /hooks 里信任三个钩子；用 $pm 或 /skills 调用技能。",
       notes: ["Codex 原生识别 Claude 插件格式，并注入 CLAUDE_PLUGIN_ROOT", "token 取会话记录里 token_count 的累计值并自动换算", "沙箱需允许写项目目录（workspace-write）"] },
     { p: 2, cmds: ["PM setup opencode", "PM setup opencode --global   # 对所有项目生效"],

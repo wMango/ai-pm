@@ -40,7 +40,7 @@ ai-pm 的核心是一个命令行工具 `pm`（打包后是 `plugin/bin/pm.mjs`�
 - **用 `pm setup`**（OpenCode、DeepSeek Harness）：需要本仓库的源码，并构建出 `pm.mjs`：
 
 ```bash
-git clone https://github.com/MiniBotFactory/ai-projects-management.git ~/ai-pm
+git clone https://github.com/wMango/ai-pm.git ~/ai-pm
 ```
 
 ```bash
@@ -60,11 +60,11 @@ node ~/ai-pm/plugin/bin/pm.mjs init --project "我的项目"
 ### 安装
 
 ```bash
-claude plugin marketplace add MiniBotFactory/ai-projects-management
+claude plugin marketplace add wMango/ai-pm
 ```
 
 ```bash
-claude plugin install ai-pm@ai-pm-local
+claude plugin install ai-pm@ai-pm
 ```
 
 ### 使用
@@ -94,11 +94,11 @@ Codex 能直接识别 Claude Code 格式的插件市场（`.claude-plugin/market
 ### 安装
 
 ```bash
-codex plugin marketplace add MiniBotFactory/ai-projects-management
+codex plugin marketplace add wMango/ai-pm
 ```
 
 ```bash
-codex plugin add ai-pm@ai-pm-local
+codex plugin add ai-pm@ai-pm
 ```
 
 装完后新开一个 Codex 会话：
