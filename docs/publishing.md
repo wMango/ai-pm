@@ -46,7 +46,7 @@
 | 3 | 市场改正式名：`ai-pm-local` → 例如 `ai-pm`，安装命令随之变为 `ai-pm@ai-pm`；同步改 README 与 platforms 文档 | ✅ 已改为 `ai-pm` |
 | 4 | `plugin.json` 补 `homepage`、`repository`、`author`、`keywords`（`homepage` 必须是合法 URL，否则插件加载失败） | ✅ 已补齐 |
 | 5 | 版本策略：每次发布递增 `plugin.json` 的 `version`；**不要**在 marketplace 条目里再写一份 `version` | ✅ 当前 0.3.0；之后每次发布照做 |
-| 6 | 运行 `claude plugin validate ./plugin --strict` | ✅ 已通过 |
+| 6 | 运行 `claude plugin validate ./plugin --strict` | ✅ 已通过，并已加入 CI（`.github/workflows/ci.yml`，每次推送和 PR 都跑） |
 | 7 | 把开发分支合并进 `main`，打标签（如 `v0.3.0`），在 GitHub Releases 写更新说明 | ✅ v0.3.0 |
 | 8 | 换一台机器或一个新用户，从零按 README 安装、初始化、开工走一遍 | ⚠️ 已在空配置下从公开仓库安装，并跑通初始化、地图和状态栏；还差在真实会话里让 AI 走完开工流程 |
 | 9 | 决定仓库自己的 `.pm/`（本项目的项目地图与 token 流水）是否随仓库公开 | ✅ 随仓库公开，本仓库就是用 ai-pm 管理自己的示例 |

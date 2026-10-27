@@ -1,5 +1,7 @@
 # ai-pm · 给 AI 编码代理用的项目管理插件
 
+[![CI](https://github.com/wMango/ai-pm/actions/workflows/ci.yml/badge.svg)](https://github.com/wMango/ai-pm/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 > 项目被 AI 放大了，人的思考带宽没变。ai-pm 用**架构图**代替任务列表，用**验收测试**代替"做没做"，从**目标**倒推下一步，让你一眼看清一个（或多个）AI 开发的项目。
 
 ![总览：三个输入，一个引擎，五个视图](docs/images/overview.svg)
