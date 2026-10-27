@@ -181,7 +181,7 @@ export const withPmLock = <T>(paths: PmPaths, fn: () => T): T => {
   }
 };
 
-const GITIGNORE_ENTRIES = ["current.json", "last-run.log", "trusted-runners", ".lock", "*.tmp"];
+const GITIGNORE_ENTRIES = ["current.json", "last-run.log", "trusted-runners", ".lock", "*.tmp", "history/"];
 
 /** 确保 .pm/.gitignore 里有本机文件，不覆盖用户已有的条目 */
 export const ensureGitignore = (paths: PmPaths): void => {

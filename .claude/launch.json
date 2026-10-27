@@ -4,8 +4,30 @@
     {
       "name": "docs",
       "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "8791", "--bind", "127.0.0.1", "--directory", "/Users/xingmingwang/Claudecode-projects/Ai-project-Management/docs"],
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8791",
+        "--bind",
+        "127.0.0.1",
+        "--directory",
+        "/Users/xingmingwang/Claudecode-projects/Ai-project-Management/docs"
+      ],
       "port": 8791
+    },
+    {
+      "name": "pm-map",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8792",
+        "--bind",
+        "127.0.0.1",
+        "--directory",
+        "/Users/xingmingwang/Claudecode-projects/Ai-project-Management/.pm"
+      ],
+      "port": 8792
     }
   ]
 }

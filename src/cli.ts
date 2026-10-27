@@ -8,10 +8,11 @@ import { record } from "./commands/record.js";
 import { context, dashboard } from "./commands/report.js";
 import { hook } from "./commands/hook.js";
 import { setup } from "./commands/setup.js";
+import { history } from "./commands/history.js";
 
 export type { CliIo } from "./commands/shared.js";
 
-const COMMANDS: Record<string, Command> = { init, start, lock, trust, verify, record, dashboard, context, hook, setup };
+const COMMANDS: Record<string, Command> = { init, start, lock, trust, verify, record, dashboard, history, context, hook, setup };
 
 const USAGE = `用法：pm <命令> [参数]
   init      [--project 名称]                 初始化 .pm/
@@ -21,6 +22,7 @@ const USAGE = `用法：pm <命令> [参数]
   verify    [--only id,id]                    运行验收测试，写出 evidence.json
   record    --session <id> --transcript <文件>  把会话 token 增量记到当前模块
   dashboard [--out 文件] [--now ISO 时间]      生成 .pm/dashboard.html
+  history   [--limit 数量]                     按提交生成 .pm/history/（目录页 + 每个提交当时的地图）
   context                                     输出给 AI 的项目摘要
   hook      <session-start|stop|session-end>  代理平台的钩子入口（读 stdin）
   setup     <opencode|deepseek> [--global]    接入 OpenCode / DeepSeek Harness

@@ -3,3 +3,4 @@ last-run.log
 trusted-runners
 .lock
 *.tmp
+history/

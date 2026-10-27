@@ -8,6 +8,8 @@ import type { Command, CliIo, PmPaths } from "./shared.js";
 import { recordSession } from "./record.js";
 import { runVerify } from "./verify.js";
 import { contextText, writeDashboard } from "./report.js";
+import { writeHistory } from "./history.js";
+import { repoRoot } from "../history/git.js";
 
 const payloadSchema = z.object({
   session_id: z.string().min(1).optional(),
@@ -55,6 +57,15 @@ const sessionEndWork = (paths: PmPaths, payload: Payload): void => {
     lines.push(...verified.warnings, `验收 ${verified.lines.length} 个节点`);
   } else {
     lines.push("runners 配置未被信任（新克隆的仓库或 runners 被改过），本次没有自动跑验收；确认命令无误后运行 pm trust");
+  }
+  // 先刷新历史，当前地图才能带上"历史"入口；失败只记日志，不影响其余步骤
+  if (repoRoot(paths.root)) {
+    try {
+      const { entries } = writeHistory(paths, new Date());
+      lines.push(`已刷新提交历史：${entries.filter((e) => e.commit).length} 个提交`);
+    } catch (error: unknown) {
+      lines.push(`提交历史未刷新：${error instanceof Error ? error.message : String(error)}`);
+    }
   }
   const { analysis } = writeDashboard(paths, new Date());
   lines.push(`已刷新 dashboard：已完成 ${analysis.metrics.built}，已生效 ${analysis.metrics.effective}/${analysis.metrics.total}`);

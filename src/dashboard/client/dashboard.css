@@ -114,6 +114,40 @@ button.chip:hover, button.chip:focus-visible { outline: 2px solid var(--doing); 
 .kpi-label { font-size: .78rem; color: var(--ink-3); margin: 12px 0 6px; }
 .bp-card { padding: 14px; margin-bottom: 14px; }
 .bp-card h3 { margin: 4px 6px 10px; font-size: 1.02rem; }
+.crumb { display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; padding-top: 22px; font-size: .86rem; color: var(--ink-2); }
+.crumb a { color: var(--ink); font-weight: 700; text-decoration: none; padding: 3px 10px; border-radius: 999px; background: var(--paper-2); }
+.crumb a:hover, .crumb a:focus-visible { background: var(--ink); color: var(--card); outline: none; }
+.crumb b { color: var(--ink); margin-right: 8px; font-family: var(--font-mono); }
+.crumb + .top { padding-top: 18px; }
+.jump a.out { margin-left: auto; border: 1.5px solid var(--line); }
+
+.commit-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.commit-row { position: relative; display: grid; grid-template-columns: 28px 120px minmax(0, 1fr) 230px; gap: 14px; align-items: start;
+  background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px 18px 16px 8px; }
+.commit-row.muted { box-shadow: none; background: transparent; border: 1.5px dashed var(--line); }
+.commit-row .rail { align-self: stretch; display: flex; justify-content: center; position: relative; }
+.commit-row .rail::before { content: ""; position: absolute; top: -26px; bottom: -26px; width: 2px; background: var(--line); }
+.commit-list > li:first-child .rail::before { top: 12px; }
+.commit-list > li:last-child .rail::before { bottom: calc(100% - 12px); }
+.commit-row .rail i { position: relative; width: 14px; height: 14px; border-radius: 50%; border: 3px solid; background: var(--card); margin-top: 4px; }
+.commit-row.trend-up .rail i { background: var(--ok-tint); }
+.commit-row.trend-down .rail i { background: var(--paper-2); }
+.commit-row .when { display: flex; flex-direction: column; font-size: .78rem; color: var(--ink-3); }
+.commit-row .when b { color: var(--ink); font-size: .9rem; }
+.commit-row .what { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.commit-row h3 { margin: 0; font-size: 1rem; line-height: 1.4; overflow-wrap: anywhere; }
+.commit-row.muted h3 { color: var(--ink-2); font-weight: 500; }
+.commit-row .change { display: grid; grid-template-columns: 86px 1fr; gap: 6px; align-items: baseline; }
+.commit-row .change .row-label { margin: 0; }
+.commit-row .side { display: flex; flex-direction: column; gap: 6px; font-size: .78rem; color: var(--ink-2); }
+.meter { display: grid; grid-template-columns: 32px 1fr 40px; gap: 8px; align-items: center; }
+.meter svg { width: 100%; height: 8px; display: block; }
+.meter b { text-align: right; color: var(--ink); }
+.commit-row .stage { color: var(--ink-3); }
+.commit-row a.open { align-self: flex-start; margin-top: 4px; color: var(--ink); font-weight: 700; text-decoration: none; border-bottom: 2px solid var(--ok); transition: border-color .2s var(--ease); }
+.commit-row a.open:hover, .commit-row a.open:focus-visible { border-color: var(--ink); outline: none; }
+#history-chart a.node:hover .bubble, #history-chart a.node:focus-visible .bubble { stroke-width: 5; }
+
 footer { margin-top: 56px; text-align: center; color: var(--ink-3); font-size: .8rem; }
 
 @media (max-width: 900px) {
@@ -121,6 +155,10 @@ footer { margin-top: 56px; text-align: center; color: var(--ink-3); font-size: .
   .legend { margin-left: 0; }
   .rec-row, .block-row { grid-template-columns: 1fr; }
   .rec-meta { grid-column: 1; }
+  .commit-row { grid-template-columns: 20px minmax(0, 1fr); }
+  .commit-row .rail { grid-row: 1 / span 3; }
+  .commit-row .when, .commit-row .what, .commit-row .side { grid-column: 2; }
+  .commit-row .change { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: reduce) {
   .pulse { animation: none; }

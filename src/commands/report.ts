@@ -1,4 +1,5 @@
 // pm dashboard / pm context：生成项目地图页面；输出给 AI 的上下文摘要
+import { existsSync } from "node:fs";
 import { relative, resolve } from "node:path";
 import { analyze } from "../analyze.js";
 import type { Analysis } from "../analyze.js";
@@ -19,7 +20,9 @@ export const analyzeProject = (paths: PmPaths, now: Date): { analysis: Analysis;
 
 export const writeDashboard = (paths: PmPaths, now: Date, outPath = paths.file("dashboard.html")): { analysis: Analysis; warnings: string[] } => {
   const result = analyzeProject(paths, now);
-  writeFileEnsured(outPath, renderDashboard(result.analysis));
+  // 历史页可随时重算，生成过才显示入口
+  const history = existsSync(paths.file("history/index.html")) ? "history/index.html" : undefined;
+  writeFileEnsured(outPath, renderDashboard(result.analysis, { history }));
   return result;
 };
 

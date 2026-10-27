@@ -36,13 +36,14 @@ const stateIn = (ctx, id, mode) => {
   return n.state;
 };
 
-/** 一行放得下就保持声明顺序；放不下时问题优先，超过两行再把健康模块收起来 */
+/** 一行放得下就保持声明顺序；放不下时问题优先；超过两行、且层里确有问题模块时，才把健康模块收起来突出问题 */
 const arrangeRow = (ctx, row, state, cols) => {
   if (row.ids.length <= cols) return { ids: row.ids, folded: [], foldable: false };
   const rank = (id) => STATE_RANK[stateIn(ctx, id, state.mode)];
   const ranked = [...row.ids].sort((a, b) => rank(a) - rank(b));
   const healthy = ranked.filter((id) => rank(id) === STATE_RANK.ok && id !== state.selected);
-  const foldable = row.ids.length > cols * CROWD.FOLD_LINES && healthy.length > 1;
+  const hasProblem = ranked.some((id) => rank(id) !== STATE_RANK.ok);
+  const foldable = row.ids.length > cols * CROWD.FOLD_LINES && healthy.length > 1 && hasProblem;
   if (!foldable || state.expanded.has(row.key)) return { ids: ranked, folded: [], foldable };
   return { ids: ranked.filter((id) => !healthy.includes(id)), folded: healthy, foldable };
 };

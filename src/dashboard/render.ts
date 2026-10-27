@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import type { Analysis } from "../analyze.js";
 
 /** 浏览器端脚本，按顺序拼进同一个闭包；后面的文件可以使用前面定义的函数 */
-const CLIENT_FILES = ["util.js", "map.js", "blockers.js", "goals.js", "cost.js", "blueprint.js", "main.js"] as const;
+const DASHBOARD_CLIENT = ["util.js", "map.js", "blockers.js", "goals.js", "cost.js", "blueprint.js", "main.js"] as const;
 const CLIENT_DIR = new URL("./client/", import.meta.url);
 
 const readClient = (name: string): string => readFileSync(new URL(name, CLIENT_DIR), "utf8");
@@ -22,7 +22,19 @@ export const toPlainData = (analysis: Analysis): Omit<Analysis, "cost"> & { cost
   cost: { ...analysis.cost, nodes: Object.fromEntries(analysis.cost.nodes) },
 });
 
-const SECTIONS = `
+/** 页面之间的导航：历史页里的地图要能回到目录，当前地图要能进入历史 */
+export interface PageLinks {
+  crumb?: { href: string; label: string; title: string; detail: string };
+  history?: string;
+}
+
+const crumbHtml = (crumb: PageLinks["crumb"]): string => (crumb
+  ? `<nav class="crumb" aria-label="位置"><a href="${escapeHtml(crumb.href)}">${escapeHtml(crumb.label)}</a><span><b>${escapeHtml(crumb.title)}</b>${escapeHtml(crumb.detail)}</span></nav>`
+  : "");
+
+const historyLink = (href: string | undefined): string => (href ? `<a class="out" href="${escapeHtml(href)}">⑥ 历史</a>` : "");
+
+const dashboardSections = (links: PageLinks): string => `${crumbHtml(links.crumb)}
 <header class="top">
   <div>
     <div class="eyebrow">项目地图 · 由 pm.yaml 生成</div>
@@ -33,7 +45,7 @@ const SECTIONS = `
 </header>
 <div id="warnings"></div>
 <nav class="jump" aria-label="视图导航">
-  <a href="#map-section">① 架构地图</a><a href="#blockers-section">② 依赖与阻塞</a><a href="#goals-section">③ 目标与下一步</a><a href="#cost-section">④ 成本</a><a href="#blueprint-section">⑤ 旅程蓝图</a>
+  <a href="#map-section">① 架构地图</a><a href="#blockers-section">② 依赖与阻塞</a><a href="#goals-section">③ 目标与下一步</a><a href="#cost-section">④ 成本</a><a href="#blueprint-section">⑤ 旅程蓝图</a>${historyLink(links.history)}
 </nav>
 <section id="map-section">
   <h2>① 架构地图</h2>
@@ -78,15 +90,23 @@ const SECTIONS = `
 </section>
 <footer>本页离线可用 · 由 ai-pm-engine 生成</footer>`;
 
-/** 生成单文件、离线可打开的项目地图页面 */
 /** 只允许本页这一段脚本执行；数据块是 application/json，不会被执行 */
 const contentSecurityPolicy = (script: string): string => {
   const hash = createHash("sha256").update(script).digest("base64");
   return `default-src 'none'; script-src 'sha256-${hash}'; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'`;
 };
 
-export const renderDashboard = (analysis: Analysis): string => {
-  const client = CLIENT_FILES.map(readClient).join("\n");
+export interface PageSpec {
+  title: string;
+  /** 已转义好的 HTML 骨架；数据一律由脚本通过 textContent 写入 */
+  body: string;
+  data: unknown;
+  client: readonly string[];
+}
+
+/** 生成单文件、离线可打开的页面：样式、脚本、数据全部内嵌 */
+export const renderPage = (spec: PageSpec): string => {
+  const client = spec.client.map(readClient).join("\n");
   const script = `\n(() => {\n"use strict";\n${client}\n})();\n`;
   return `<!doctype html>
 <html lang="zh-CN">
@@ -94,17 +114,20 @@ export const renderDashboard = (analysis: Analysis): string => {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="${contentSecurityPolicy(script)}">
-<title>${escapeHtml(analysis.project)} · 项目地图</title>
+<title>${escapeHtml(spec.title)}</title>
 <style>
 ${readClient("dashboard.css")}
 </style>
 </head>
 <body>
-<main>${SECTIONS}
+<main>${spec.body}
 </main>
-<script type="application/json" id="pm-data">${serializeForScript(toPlainData(analysis))}</script>
+<script type="application/json" id="pm-data">${serializeForScript(spec.data)}</script>
 <script>${script}</script>
 </body>
 </html>
 `;
 };
+
+export const renderDashboard = (analysis: Analysis, links: PageLinks = {}): string =>
+  renderPage({ title: `${analysis.project} · 项目地图`, body: dashboardSections(links), data: toPlainData(analysis), client: DASHBOARD_CLIENT });

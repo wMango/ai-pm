@@ -131,6 +131,15 @@ describe("dashboard page", () => {
     expect(doc.querySelector('#map-svg g.node[data-id="svc0"]')).not.toBeNull();
   });
 
+  test("does not fold a crowded layer whose modules are all healthy", async () => {
+    const { model, evidence, ledger } = loadDemo();
+    const healthy = CROWD_IDS.healthy.map((id) => ({ id, name: `服务模块 ${id}`, layer: "external" as const, acceptance: [`t/${id}.test.ts`], depends: [] }));
+    const passing = Object.fromEntries(healthy.map((n) => [n.id, { passed: 1, total: 1, pendingReview: false }]));
+    const doc = await open(analyze({ ...model, views: { ...model.views, logical: [...model.views.logical, ...healthy] } }, { evidence: { ...evidence, ...passing }, ledger, now: DEMO_NOW }));
+    expect(doc.querySelector('#map-svg g.fold[data-fold="logical:external"]')).toBeNull();
+    expect(doc.querySelector('#map-svg g.node[data-id="svc0"]')).not.toBeNull();
+  });
+
   test("thins out edges on a dense map and can show them all", async () => {
     const doc = await open(crowded());
     click(doc.querySelector("#map-svg g.fold[data-fold]"));

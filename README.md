@@ -225,6 +225,7 @@ goals:
 | `pm verify [--only id,id]` | 运行验收测试，写出 `evidence.json` |
 | `pm record --session <id> --transcript <文件>` | 把会话的 token 增量记到当前模块 |
 | `pm dashboard [--out 文件] [--now 时间]` | 生成项目地图页面 |
+| `pm history [--limit 数量]` | 按提交生成 `.pm/history/`：目录页 + 每个提交当时的地图 |
 | `pm context` | 输出给 AI 的项目摘要 |
 | `pm hook <session-start\|stop\|session-end>` | 代理平台的钩子入口，从 stdin 读取 |
 | `pm setup <opencode\|deepseek> [--global]` | 接入 OpenCode / DeepSeek Harness |
@@ -241,6 +242,7 @@ goals:
 | `evidence.json` | `pm verify` | 是 |
 | `ledger.jsonl` | 钩子 | 是 |
 | `dashboard.html` | `pm dashboard` | 自行决定 |
+| `history/` | `pm history`、会话结束 | 否（由 git 历史里的 `pm.yaml`、`evidence.json`、`ledger.jsonl` 重算） |
 | `current.json`、`last-run.log`、`trusted-runners` | 本机 | 否（`.pm/.gitignore` 已排除） |
 
 **待复核**：以下任一情况会把节点标为待复核，在页面和 AI 上下文里醒目提示，等人复核后重新锁定：
