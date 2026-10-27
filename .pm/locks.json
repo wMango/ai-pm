@@ -144,11 +144,11 @@
     }
   },
   "dash-client": {
-    "lockedAt": "2026-10-27T03:16:28.233Z",
+    "lockedAt": "2026-10-27T09:13:23.898Z",
     "by": "ai",
     "files": {
       ".pm/acceptance/dash-client.feature": "4efe1f5861f0a2befa9de2c5f5d4b7c68b32a4d716ff4b273f64a8ec3fe9cabb",
-      "tests/dashboard-dom.test.ts": "e857fd8e5187815a60da0763dbbead7f7f9b5131cc30e2636309f4837f73e74a"
+      "tests/dashboard-dom.test.ts": "481ed85edf3d88601792167c86e88af2210123b2920f5bba68d67ef092ec4f3c"
     },
     "runners": {
       "tests/dashboard-dom.test.ts": "npx vitest run {file}"
@@ -327,6 +327,30 @@
     },
     "runners": {
       "ops/health/p-sqlite.sh": "bash {file}"
+    }
+  },
+  "history-gen": {
+    "lockedAt": "2026-10-27T09:13:15.206Z",
+    "by": "ai",
+    "files": {
+      ".pm/acceptance/history-gen.feature": "f13a2d75958cb61788aca69c47930f4459b361fde3d7d29fe06e67f3cef333e9",
+      "tests/history/timeline.test.ts": "ef3bc4c69680f0fc4e8ecb8ba536634f1c8cbc23b49becf84b9d5b0312405b8e",
+      "tests/history/command.test.ts": "10c3fce04c813f904c10cf282ae148ddca86d57c39169e39674dd7bdbfc7ab07"
+    },
+    "runners": {
+      "tests/history/timeline.test.ts": "npx vitest run {file}",
+      "tests/history/command.test.ts": "npx vitest run {file}"
+    }
+  },
+  "git-tool": {
+    "lockedAt": "2026-10-27T09:13:15.206Z",
+    "by": "ai",
+    "files": {
+      ".pm/acceptance/git-tool.feature": "207ac4c99afa715fda01bbef249d4fa003b395f5e4ce1c5cde11f5d44ab64fc3",
+      "ops/health/git-tool.sh": "b4ad803cc032d5e1deb5b089c5cfbf766c090f7dbae0b4ef15a654afe0d6865c"
+    },
+    "runners": {
+      "ops/health/git-tool.sh": "bash {file}"
     }
   }
 }

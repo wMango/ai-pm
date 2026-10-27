@@ -153,5 +153,20 @@
     "passed": 1,
     "total": 1,
     "pendingReview": false
+  },
+  "f-history": {
+    "passed": 2,
+    "total": 2,
+    "pendingReview": true
+  },
+  "history-gen": {
+    "passed": 2,
+    "total": 2,
+    "pendingReview": true
+  },
+  "git-tool": {
+    "passed": 1,
+    "total": 1,
+    "pendingReview": true
   }
 }
