@@ -1,4 +1,6 @@
 // pm setup <opencode|deepseek> [--global]：把 ai-pm 接入 Claude Code 之外的代理平台
+// pm setup statusline：在本项目的 Claude Code 状态栏里显示一行项目摘要
+// pm setup preview：在 Claude 桌面应用的预览列表里加一个 pm-map 入口，点开就在右侧面板显示实时地图
 import { existsSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
@@ -74,10 +76,91 @@ const targetsFor = (platform: Platform, global: boolean, cwd: string): Target =>
   return { skill: join(base, "skills/pm/SKILL.md"), agents: global ? join(homedir(), ".dsh/AGENTS.md") : join(cwd, "AGENTS.md") };
 };
 
+const STATUSLINE_SETTINGS = ".claude/settings.local.json";
+
+/** 只在还没有状态栏时写入，保留 settings.local.json 里的其他设置 */
+const setupStatusline = (cwd: string, pmCommand: string): string => {
+  const path = join(cwd, STATUSLINE_SETTINGS);
+  const text = readOptional(path);
+  let settings: Record<string, unknown> = {};
+  if (text !== null) {
+    try {
+      const parsed: unknown = JSON.parse(text);
+      if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) throw new Error("不是对象");
+      settings = parsed as Record<string, unknown>;
+    } catch {
+      throw new CommandError(`${STATUSLINE_SETTINGS} 不是合法的 JSON 对象，没有改动它`);
+    }
+  }
+  const command = `${pmCommand} statusline`;
+  if (settings.statusLine !== undefined) {
+    throw new CommandError(`${STATUSLINE_SETTINGS} 里已经配置了状态栏，没有覆盖它。想换成 ai-pm 的摘要，把 statusLine.command 改成：\n  ${command}`);
+  }
+  writeFileEnsured(path, `${JSON.stringify({ ...settings, statusLine: { type: "command", command } }, null, 2)}\n`);
+  return path;
+};
+
+const LAUNCH_FILE = ".claude/launch.json";
+const PREVIEW_NAME = "pm-map";
+const PREVIEW_PORT = 8793;
+
+type LaunchConfig = { name?: unknown; runtimeArgs?: unknown };
+
+const readLaunch = (path: string): { version: string; configurations: LaunchConfig[] } & Record<string, unknown> => {
+  const text = readOptional(path);
+  if (text === null) return { version: "0.0.1", configurations: [] };
+  try {
+    const parsed: unknown = JSON.parse(text);
+    const configurations = (parsed as { configurations?: unknown }).configurations ?? [];
+    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed) || !Array.isArray(configurations)) throw new Error("结构不对");
+    return { version: "0.0.1", ...(parsed as Record<string, unknown>), configurations: configurations as LaunchConfig[] };
+  } catch {
+    throw new CommandError(`${LAUNCH_FILE} 不是合法的预览配置（JSON 对象，configurations 为数组），没有改动它`);
+  }
+};
+
+/** 已经有 pm-map，或者已有入口在运行 pm serve，就不再添加 */
+const existingPreview = (configs: readonly LaunchConfig[]): string | null => {
+  const found = configs.find((c) => c.name === PREVIEW_NAME
+    || (Array.isArray(c.runtimeArgs) && c.runtimeArgs.some((a) => typeof a === "string" && a.endsWith("pm.mjs")) && c.runtimeArgs.includes("serve")));
+  return found ? String(found.name ?? PREVIEW_NAME) : null;
+};
+
+/** 应用负责启动和停止这个入口，所以关掉无人访问自动退出 */
+const setupPreview = (cwd: string, pmPath: string): { path: string; added: boolean; name: string } => {
+  const path = join(cwd, LAUNCH_FILE);
+  const launch = readLaunch(path);
+  const existing = existingPreview(launch.configurations);
+  if (existing) return { path, added: false, name: existing };
+  const entry = { name: PREVIEW_NAME, runtimeExecutable: "node", runtimeArgs: [pmPath, "serve", "--port", String(PREVIEW_PORT), "--idle-minutes", "0"], port: PREVIEW_PORT };
+  writeFileEnsured(path, `${JSON.stringify({ ...launch, configurations: [...launch.configurations, entry] }, null, 2)}\n`);
+  return { path, added: true, name: PREVIEW_NAME };
+};
+
+/** 插件里打包好的 pm.mjs；不存在时提示先构建 */
+const bundledPm = (): string => {
+  const pmPath = join(pluginRoot(), "bin/pm.mjs");
+  if (!existsSync(pmPath)) throw new CommandError(`找不到 ${pmPath}，请先运行 npm run build:plugin`);
+  return pmPath;
+};
+
 export const setup: Command = (args, io) => {
   const { positionals, flags } = parseArgs(args, { flags: ["--global"] });
+  if (positionals[0] === "preview") {
+    const result = setupPreview(io.cwd, bundledPm());
+    io.out(result.added
+      ? `已在 ${relative(io.cwd, result.path)} 加入预览入口 ${result.name}：在 Claude 桌面应用的预览列表里点开它，右侧面板就会显示实时地图\n`
+      : `${relative(io.cwd, result.path)} 里已经有预览入口 ${result.name}，没有重复添加\n`);
+    return EXIT.ok;
+  }
+  if (positionals[0] === "statusline") {
+    const pmPath = bundledPm();
+    const path = setupStatusline(io.cwd, `node ${JSON.stringify(pmPath)}`);
+    io.out(`已在 ${relative(io.cwd, path)} 配好状态栏（只对本项目、本机生效）；重新打开 Claude Code 会话即可看到\n`);
+    return EXIT.ok;
+  }
   const platform = positionals[0] as Platform | undefined;
-  if (!platform || !PLATFORMS.includes(platform)) throw new UsageError(`pm setup 需要平台名：${PLATFORMS.join(" | ")}（Claude Code 与 Codex 直接安装插件即可）`);
+  if (!platform || !PLATFORMS.includes(platform)) throw new UsageError(`pm setup 需要平台名：${PLATFORMS.join(" | ")} | statusline | preview（Claude Code 与 Codex 直接安装插件即可）`);
   const root = pluginRoot();
   const pmPath = join(root, "bin/pm.mjs");
   if (!existsSync(pmPath)) throw new CommandError(`找不到 ${pmPath}，请先运行 npm run build:plugin`);

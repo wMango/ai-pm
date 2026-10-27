@@ -48,8 +48,10 @@ const wan = (tokens) => `${Number((tokens / 10000).toFixed(tokens % 10000 ? 1 : 
 const clip = (text, max) => (text.length > max ? `${text.slice(0, max - 1)}…` : text);
 
 /** 读取并索引内嵌数据 */
-const loadData = () => {
-  const data = JSON.parse(document.getElementById("pm-data").textContent);
+const loadData = () => indexData(JSON.parse(document.getElementById("pm-data").textContent));
+
+/** 给分析数据建索引；实时模式下拿到新数据也用它 */
+const indexData = (data) => {
   const byId = new Map(data.nodes.map((n) => [n.id, n]));
   const node = (id) => byId.get(id) || { id, name: id, state: "todo", view: "logical", goals: [], rootBlockers: [] };
   const depsOf = (id) => data.edges.filter((e) => e.from === id && (e.kind === "hard" || e.kind === "soft"));

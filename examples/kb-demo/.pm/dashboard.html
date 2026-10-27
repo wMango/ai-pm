@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-nqd1AzhD9nBL7+PGQB7CRHLbe9Kdx3Rg86+nn3Djtxk='; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-GNISzvqoJgOal8TeAfUtRq1Qbfnd66qJh/DdoWeh5rc='; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'">
 <title>智能知识库问答平台 · 项目地图</title>
 <style>
 :root {
@@ -128,6 +128,9 @@ button.chip:hover, button.chip:focus-visible { outline: 2px solid var(--doing); 
 .crumb b { color: var(--ink); margin-right: 8px; font-family: var(--font-mono); }
 .crumb + .top { padding-top: 18px; }
 .jump a.out { margin-left: auto; border: 1.5px solid var(--line); }
+.live-badge { margin-left: auto; align-self: center; font: 700 .76rem var(--font-mono); padding: 3px 10px; border-radius: 999px; color: var(--ok); background: var(--ok-tint); }
+.live-badge[data-state="off"] { color: var(--ink-3); background: var(--paper-2); }
+.live-badge + a.out { margin-left: 0; }
 
 .commit-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
 .commit-row { position: relative; display: grid; grid-template-columns: 28px 120px minmax(0, 1fr) 230px; gap: 14px; align-items: start;
@@ -286,8 +289,10 @@ const wan = (tokens) => `${Number((tokens / 10000).toFixed(tokens % 10000 ? 1 : 
 const clip = (text, max) => (text.length > max ? `${text.slice(0, max - 1)}…` : text);
 
 /** 读取并索引内嵌数据 */
-const loadData = () => {
-  const data = JSON.parse(document.getElementById("pm-data").textContent);
+const loadData = () => indexData(JSON.parse(document.getElementById("pm-data").textContent));
+
+/** 给分析数据建索引；实时模式下拿到新数据也用它 */
+const indexData = (data) => {
   const byId = new Map(data.nodes.map((n) => [n.id, n]));
   const node = (id) => byId.get(id) || { id, name: id, state: "todo", view: "logical", goals: [], rootBlockers: [] };
   const depsOf = (id) => data.edges.filter((e) => e.from === id && (e.kind === "hard" || e.kind === "soft"));
@@ -926,6 +931,85 @@ const renderBlueprints = (ctx) => {
   }));
 };
 
+// ---------- 实时更新：拿到新数据就原地重绘，保留正在看的视图、视角与选中的模块 ----------
+// 两种来源：① 默认，本地文件页定时重新加载同目录的数据脚本，不需要服务器；② pm serve 的推送
+const LIVE_TIME = new Intl.DateTimeFormat("zh-CN", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
+const LIVE_POLL_MS = 2000;
+
+const liveBadge = (label) => {
+  const badge = el("span", { class: "live-badge", role: "status", "aria-live": "polite", "data-state": "on" }, [label]);
+  const nav = document.querySelector("nav.jump");
+  if (nav) nav.insertBefore(badge, nav.querySelector("a.out"));
+  return (text, kind) => { badge.textContent = text; badge.setAttribute("data-state", kind); };
+};
+
+/** 换上新数据并重绘；选中的模块如果已经不存在就取消选中 */
+const applyLiveData = (live, state, rerender, data) => {
+  live.ctx = indexData(data);
+  if (state.selected && !live.ctx.data.nodes.some((n) => n.id === state.selected)) state.selected = null;
+  rerender();
+};
+
+/** ① 本地文件：数据脚本调用 window.__pmLive(版本, 数据)；后台标签页暂停轮询 */
+const watchLiveFile = (live, state, rerender, marker) => {
+  const file = marker.getAttribute("content");
+  let version = marker.getAttribute("data-version");
+  const show = liveBadge("● 自动更新");
+  window.__pmLive = (next, data) => {
+    if (next === version) return;
+    version = next;
+    try {
+      applyLiveData(live, state, rerender, data);
+      show(`● 已更新 ${LIVE_TIME.format(new Date())}`, "on");
+    } catch (error) {
+      show("○ 更新失败", "off");
+      console.error(error);
+    }
+  };
+  const poll = () => {
+    if (document.hidden) return;
+    const script = document.createElement("script");
+    script.src = `${file}?t=${Date.now()}`;
+    script.onload = () => script.remove();
+    script.onerror = () => { script.remove(); show("○ 找不到数据文件，运行 pm dashboard 后恢复", "off"); };
+    document.head.appendChild(script);
+  };
+  poll();
+  setInterval(poll, LIVE_POLL_MS);
+  document.addEventListener("visibilitychange", poll);
+};
+
+/** ② pm serve：收到推送后取 data.json */
+const watchLiveServer = (live, state, rerender, marker) => {
+  if (typeof EventSource !== "function" || typeof fetch !== "function") return;
+  const show = liveBadge("● 实时");
+  let version = marker.getAttribute("content");
+  const refresh = async (next) => {
+    try {
+      const res = await fetch("data.json", { cache: "no-store" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      applyLiveData(live, state, rerender, await res.json());
+      version = next;
+      show(`● 已更新 ${LIVE_TIME.format(new Date())}`, "on");
+    } catch (error) {
+      show("○ 读取失败（pm.yaml 有错？）", "off");
+      console.error(error);
+    }
+  };
+  const source = new EventSource("events");
+  source.addEventListener("update", (e) => { if (e.data !== version) refresh(e.data); });
+  source.onopen = () => show("● 实时", "on");
+  source.onerror = () => show("○ 连接断开，重试中", "off");
+};
+
+/** 离线导出的静态页面两种标记都没有，什么都不做 */
+const watchLive = (live, state, rerender) => {
+  const server = document.querySelector('meta[name="pm-live"]');
+  if (server) return watchLiveServer(live, state, rerender, server);
+  const file = document.querySelector('meta[name="pm-live-file"]');
+  if (file) watchLiveFile(live, state, rerender, file);
+};
+
 // ---------- 入口：页头、交互绑定、逐个视图渲染（单个视图出错不影响其他视图） ----------
 const renderHeader = (ctx) => {
   const { data } = ctx;
@@ -944,7 +1028,8 @@ const renderHeader = (ctx) => {
 
 const initialView = (ctx) => ["logical", "functional", "physical"].find((v) => ctx.data.nodes.some((n) => n.view === v)) || "logical";
 
-const bindInteractions = (ctx, state) => {
+/** 交互只绑定一次；数据在实时模式下会被整体替换，所以总是读 live.ctx */
+const bindInteractions = (live, state) => {
   const focusOn = (attr, value) => {
     const target = [...document.querySelectorAll("#map-svg g.node")].find((g) => g.getAttribute(attr) === value);
     if (target) target.focus({ preventScroll: true });
@@ -956,13 +1041,13 @@ const bindInteractions = (ctx, state) => {
     const onMap = active && active.closest && active.closest("#map-svg");
     const attr = onMap ? ["data-id", "data-fold"].find((a) => active.hasAttribute(a)) : null;
     const value = attr ? active.getAttribute(attr) : null;
-    renderMap(ctx, state);
-    renderPanel(ctx, state);
+    renderMap(live.ctx, state);
+    renderPanel(live.ctx, state);
     if (attr) focusOn(attr, value);
   };
   const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const select = (id) => {
-    state.view = ctx.node(id).view;
+    state.view = live.ctx.node(id).view;
     state.selected = id;
     redraw();
     document.getElementById("map-section").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
@@ -1016,6 +1101,21 @@ const reportError = (name, error) => {
   console.error(error);
 };
 
+/** 逐个视图渲染（单个视图出错不影响其他视图）；实时更新时会再次调用 */
+const renderAll = (ctx, state) => {
+  document.querySelectorAll(".render-error").forEach((note) => note.remove());
+  const steps = [
+    ["页头", () => renderHeader(ctx)],
+    ["架构地图", () => { renderMap(ctx, state); renderPanel(ctx, state); }],
+    ["依赖与阻塞", () => renderBlockers(ctx)],
+    ["目标", () => renderGoals(ctx)],
+    ["下一步", () => { renderRecs(ctx); renderWhatIf(ctx); }],
+    ["成本", () => renderCost(ctx)],
+    ["旅程蓝图", () => renderBlueprints(ctx)],
+  ];
+  steps.forEach(([name, run]) => { try { run(); } catch (error) { reportError(name, error); } });
+};
+
 const boot = () => {
   let ctx;
   try {
@@ -1024,17 +1124,11 @@ const boot = () => {
     reportError("数据", error);
     return;
   }
+  const live = { ctx };
   const state = { view: initialView(ctx), mode: "effective", selected: null, expanded: new Set(), allEdges: false };
-  const steps = [
-    ["页头", () => renderHeader(ctx)],
-    ["架构地图", () => { renderMap(ctx, state); renderPanel(ctx, state); bindInteractions(ctx, state); }],
-    ["依赖与阻塞", () => renderBlockers(ctx)],
-    ["目标", () => renderGoals(ctx)],
-    ["下一步", () => { renderRecs(ctx); renderWhatIf(ctx); }],
-    ["成本", () => renderCost(ctx)],
-    ["旅程蓝图", () => renderBlueprints(ctx)],
-  ];
-  steps.forEach(([name, run]) => { try { run(); } catch (error) { reportError(name, error); } });
+  renderAll(ctx, state);
+  try { bindInteractions(live, state); } catch (error) { reportError("交互", error); }
+  watchLive(live, state, () => renderAll(live.ctx, state));
 };
 
 boot();

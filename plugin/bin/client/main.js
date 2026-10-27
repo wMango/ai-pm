@@ -16,7 +16,8 @@ const renderHeader = (ctx) => {
 
 const initialView = (ctx) => ["logical", "functional", "physical"].find((v) => ctx.data.nodes.some((n) => n.view === v)) || "logical";
 
-const bindInteractions = (ctx, state) => {
+/** 交互只绑定一次；数据在实时模式下会被整体替换，所以总是读 live.ctx */
+const bindInteractions = (live, state) => {
   const focusOn = (attr, value) => {
     const target = [...document.querySelectorAll("#map-svg g.node")].find((g) => g.getAttribute(attr) === value);
     if (target) target.focus({ preventScroll: true });
@@ -28,13 +29,13 @@ const bindInteractions = (ctx, state) => {
     const onMap = active && active.closest && active.closest("#map-svg");
     const attr = onMap ? ["data-id", "data-fold"].find((a) => active.hasAttribute(a)) : null;
     const value = attr ? active.getAttribute(attr) : null;
-    renderMap(ctx, state);
-    renderPanel(ctx, state);
+    renderMap(live.ctx, state);
+    renderPanel(live.ctx, state);
     if (attr) focusOn(attr, value);
   };
   const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const select = (id) => {
-    state.view = ctx.node(id).view;
+    state.view = live.ctx.node(id).view;
     state.selected = id;
     redraw();
     document.getElementById("map-section").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
@@ -88,6 +89,21 @@ const reportError = (name, error) => {
   console.error(error);
 };
 
+/** 逐个视图渲染（单个视图出错不影响其他视图）；实时更新时会再次调用 */
+const renderAll = (ctx, state) => {
+  document.querySelectorAll(".render-error").forEach((note) => note.remove());
+  const steps = [
+    ["页头", () => renderHeader(ctx)],
+    ["架构地图", () => { renderMap(ctx, state); renderPanel(ctx, state); }],
+    ["依赖与阻塞", () => renderBlockers(ctx)],
+    ["目标", () => renderGoals(ctx)],
+    ["下一步", () => { renderRecs(ctx); renderWhatIf(ctx); }],
+    ["成本", () => renderCost(ctx)],
+    ["旅程蓝图", () => renderBlueprints(ctx)],
+  ];
+  steps.forEach(([name, run]) => { try { run(); } catch (error) { reportError(name, error); } });
+};
+
 const boot = () => {
   let ctx;
   try {
@@ -96,17 +112,11 @@ const boot = () => {
     reportError("数据", error);
     return;
   }
+  const live = { ctx };
   const state = { view: initialView(ctx), mode: "effective", selected: null, expanded: new Set(), allEdges: false };
-  const steps = [
-    ["页头", () => renderHeader(ctx)],
-    ["架构地图", () => { renderMap(ctx, state); renderPanel(ctx, state); bindInteractions(ctx, state); }],
-    ["依赖与阻塞", () => renderBlockers(ctx)],
-    ["目标", () => renderGoals(ctx)],
-    ["下一步", () => { renderRecs(ctx); renderWhatIf(ctx); }],
-    ["成本", () => renderCost(ctx)],
-    ["旅程蓝图", () => renderBlueprints(ctx)],
-  ];
-  steps.forEach(([name, run]) => { try { run(); } catch (error) { reportError(name, error); } });
+  renderAll(ctx, state);
+  try { bindInteractions(live, state); } catch (error) { reportError("交互", error); }
+  watchLive(live, state, () => renderAll(live.ctx, state));
 };
 
 boot();

@@ -127,7 +127,7 @@ goals:
   test("地图页面的「目标」视图里看到同样的缺口和推荐", async () => {
     const { pm, root } = makeProject(GAP_PROJECT);
     const contextRecs = contextLines(pm).filter((line) => /^ {2}\d+\. /.test(line)).map((line) => line.replace(/^ {2}\d+\. (\S+?)（.*$/, "$1"));
-    pm("dashboard");
+    pm("dashboard", "--static");
 
     window = new Window({ settings: { enableJavaScriptEvaluation: true, suppressInsecureJavaScriptEnvironmentWarning: true } });
     window.document.write(readFileSync(join(root, ".pm/dashboard.html"), "utf8"));

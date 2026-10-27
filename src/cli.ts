@@ -1,3 +1,4 @@
+import { spawnSync } from "node:child_process";
 import { closeSync, openSync, readFileSync, readSync, realpathSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 import { EXIT, UsageError } from "./commands/shared.js";
@@ -9,10 +10,13 @@ import { context, dashboard } from "./commands/report.js";
 import { hook } from "./commands/hook.js";
 import { setup } from "./commands/setup.js";
 import { history } from "./commands/history.js";
+import { statusline } from "./commands/statusline.js";
+import { serve } from "./commands/serve.js";
+import { open } from "./commands/open.js";
 
 export type { CliIo } from "./commands/shared.js";
 
-const COMMANDS: Record<string, Command> = { init, start, lock, trust, verify, record, dashboard, history, context, hook, setup };
+const COMMANDS: Record<string, Command> = { init, start, lock, trust, verify, record, dashboard, history, open, serve, context, statusline, hook, setup };
 
 const USAGE = `用法：pm <命令> [参数]
   init      [--project 名称]                 初始化 .pm/
@@ -21,11 +25,16 @@ const USAGE = `用法：pm <命令> [参数]
   trust                                       信任当前 runners，允许会话结束时自动跑验收
   verify    [--only id,id]                    运行验收测试，写出 evidence.json
   record    --session <id> --transcript <文件>  把会话 token 增量记到当前模块
-  dashboard [--out 文件] [--now ISO 时间]      生成 .pm/dashboard.html
+  dashboard [--out 文件] [--now ISO 时间] [--static]  生成 .pm/dashboard.html（打开后自动更新；--static 不带实时功能）
   history   [--limit 数量]                     按提交生成 .pm/history/（目录页 + 每个提交当时的地图）
+  open      [history] [--print]               刷新并打开项目地图（或提交历史）；--print 只输出路径
+  serve     [--port 8793] [--idle-minutes 10] 可选：本机只读的实时地图服务（秒级更新），无人访问时自动退出
   context                                     输出给 AI 的项目摘要
   hook      <session-start|stop|session-end>  代理平台的钩子入口（读 stdin）
+  statusline                                  Claude Code 状态栏用：读 stdin，输出一行项目摘要
   setup     <opencode|deepseek> [--global]    接入 OpenCode / DeepSeek Harness
+  setup     statusline                        在本项目的 Claude Code 状态栏显示项目摘要
+  setup     preview                           在 Claude 桌面应用的预览列表里加入 pm-map 地图入口
 所有命令都支持 --dir 指定 .pm 目录（默认 .pm）
 `;
 
@@ -88,6 +97,17 @@ const readLineFromTerminal = (): string | null => {
     if (fd !== null) closeSync(fd);
   }
 };
+const OPEN_TIMEOUT_MS = 10_000;
+/** 系统默认程序打开文件：不经过 shell，路径作为单独参数传入 */
+const openWithSystem = (target: string): { ok: boolean; error?: string } => {
+  const [command, args] = process.platform === "darwin" ? ["open", [target]]
+    : process.platform === "win32" ? ["cmd", ["/c", "start", "", target]]
+    : ["xdg-open", [target]];
+  const result = spawnSync(command, args, { stdio: "ignore", timeout: OPEN_TIMEOUT_MS, windowsHide: true });
+  if (result.error) return { ok: false, error: `${command} 无法运行：${result.error.message}` };
+  return result.status === 0 ? { ok: true } : { ok: false, error: `${command} 退出码 ${result.status}` };
+};
+
 if (isMain) {
   process.exitCode = runCli(process.argv.slice(2), {
     cwd: process.cwd(),
@@ -96,6 +116,7 @@ if (isMain) {
     readStdin: () => (process.stdin.isTTY ? "" : readFileSync(0, "utf8")),
     // 标准输入和输出都连着终端，才算"人在终端前"；AI 通过工具运行命令、或用管道喂输入时都不成立
     isInteractive: () => Boolean(process.stdin.isTTY && process.stdout.isTTY),
+    openPath: openWithSystem,
     prompt: (question) => {
       process.stdout.write(`${question} `);
       return readLineFromTerminal();

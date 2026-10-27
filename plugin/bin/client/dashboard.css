@@ -120,6 +120,9 @@ button.chip:hover, button.chip:focus-visible { outline: 2px solid var(--doing); 
 .crumb b { color: var(--ink); margin-right: 8px; font-family: var(--font-mono); }
 .crumb + .top { padding-top: 18px; }
 .jump a.out { margin-left: auto; border: 1.5px solid var(--line); }
+.live-badge { margin-left: auto; align-self: center; font: 700 .76rem var(--font-mono); padding: 3px 10px; border-radius: 999px; color: var(--ok); background: var(--ok-tint); }
+.live-badge[data-state="off"] { color: var(--ink-3); background: var(--paper-2); }
+.live-badge + a.out { margin-left: 0; }
 
 .commit-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
 .commit-row { position: relative; display: grid; grid-template-columns: 28px 120px minmax(0, 1fr) 230px; gap: 14px; align-items: start;

@@ -1,6 +1,6 @@
 {
   "name": "ai-pm-engine",
-  "version": "1.0.0",
+  "version": "0.3.0",
   "description": "AI 时代图形化项目管理：pm.yaml 计算引擎",
   "directories": {
     "doc": "docs"
@@ -12,12 +12,14 @@
     "typecheck": "tsc --noEmit",
     "export-demo": "tsx scripts/export-demo.ts",
     "pm": "tsx src/cli.ts",
-    "demo:dashboard": "tsx src/cli.ts dashboard --dir examples/kb-demo/.pm --now 2026-10-26T09:00:00Z && tsx src/cli.ts dashboard --dir examples/kb-demo/.pm --now 2026-10-26T09:00:00Z --out docs/assets/demo-dashboard.html",
+    "demo:dashboard": "tsx src/cli.ts dashboard --static --dir examples/kb-demo/.pm --now 2026-10-26T09:00:00Z && tsx src/cli.ts dashboard --static --dir examples/kb-demo/.pm --now 2026-10-26T09:00:00Z --out docs/assets/demo-dashboard.html",
     "build:plugin": "tsx scripts/build-plugin.ts"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "wMango",
+  "homepage": "https://github.com/wMango/ai-pm",
+  "repository": { "type": "git", "url": "git+https://github.com/wMango/ai-pm.git" },
+  "license": "MIT",
   "dependencies": {
     "yaml": "^2.9.1",
     "zod": "^4.6.7"

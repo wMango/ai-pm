@@ -25,7 +25,10 @@ views:
     - { id: f-history, name: 按提交回看项目演进（历史目录页）, spec: .pm/acceptance/f-history.feature, acceptance: [tests/history/command.test.ts, tests/history/timeline.test.ts], depends: [{ on: f-map }] }
     - { id: f-autorun, name: 会话结束自动记 token、跑验收、刷新地图, spec: .pm/acceptance/f-autorun.feature, acceptance: [tests/commands/tokens-hooks.test.ts, tests/commands/hardening.test.ts], depends: [{ on: f-verify }, { on: f-cost }, { on: f-map }] }
     # 规划中（slice: later）
-    - { id: f-live-panel, name: Claude Code 内常驻面板实时刷新（P3）, depends: [{ on: f-map }] }
+    # 写代码时不切出去也能看到项目（P3 常驻面板）
+    - { id: f-statusline, name: 在 Claude Code 状态栏看到一行项目摘要, spec: .pm/acceptance/f-statusline.feature, acceptance: [tests/live/statusline.test.ts], depends: [{ on: f-next }] }
+    - { id: f-open, name: 一步打开项目地图（预览按钮、/pm-map、pm open）, spec: .pm/acceptance/f-open.feature, acceptance: [tests/live/open.test.ts], depends: [{ on: f-map }] }
+    - { id: f-live-map, name: 地图自动更新（默认免服务，pm serve 可选）, spec: .pm/acceptance/f-live-map.feature, acceptance: [tests/live/file-live.test.ts, tests/live/serve.test.ts, tests/live/live-dom.test.ts], depends: [{ on: f-map }] }
 
   # ── 逻辑视图：分层组件 ──
   logical:
@@ -45,7 +48,9 @@ views:
     - { id: context-gen, name: AI 上下文摘要（report / pm context）, layer: service, spec: .pm/acceptance/context-gen.feature, acceptance: [tests/commands/tokens-hooks.test.ts, tests/commands/hardening.test.ts], depends: [{ on: goals-calc }] }
     - { id: history-gen, name: 提交历史生成（history + commands/history）, layer: service, spec: .pm/acceptance/history-gen.feature, acceptance: [tests/history/timeline.test.ts, tests/history/command.test.ts], depends: [{ on: engine }, { on: dash-render }, { on: git-tool }] }
     - { id: setup-gen, name: 平台接入生成（commands/setup）, layer: service, spec: .pm/acceptance/setup-gen.feature, acceptance: [tests/commands/setup.test.ts] }
-    - { id: live-panel, name: 常驻面板（P3，未建）, layer: front, depends: [{ on: dash-render }] }
+    - { id: statusline, name: 状态栏摘要（commands/statusline + setup）, layer: front, spec: .pm/acceptance/statusline.feature, acceptance: [tests/live/statusline.test.ts], depends: [{ on: goals-calc }, { on: pmdir }] }
+    - { id: opener, name: 打开入口（commands/open + setup preview + /pm-map）, layer: front, spec: .pm/acceptance/opener.feature, acceptance: [tests/live/open.test.ts], depends: [{ on: dash-render }, { on: history-gen }] }
+    - { id: live-server, name: 实时更新（数据脚本 + 可选 live/server）, layer: service, spec: .pm/acceptance/live-server.feature, acceptance: [tests/live/file-live.test.ts, tests/live/serve.test.ts, tests/live/live-dom.test.ts], depends: [{ on: dash-render }, { on: pmdir }] }
     # data
     - { id: pmdir, name: .pm 目录（pm.yaml / evidence / ledger / locks）, layer: data, spec: .pm/acceptance/pmdir.feature, acceptance: [tests/acceptance/pmdir.test.ts] }
     # external
@@ -74,7 +79,9 @@ mappings:
   - { from: f-inject, to: [hook-adapter, context-gen], kind: realized_by }
   - { from: f-autorun, to: [hook-adapter, cost-calc, verify-runner, dash-render], kind: realized_by }
   - { from: f-history, to: [cli, history-gen], kind: realized_by }
-  - { from: f-live-panel, to: live-panel, kind: realized_by }
+  - { from: f-statusline, to: [statusline, hook-adapter], kind: realized_by }
+  - { from: f-live-map, to: [cli, live-server, dash-client], kind: realized_by }
+  - { from: f-open, to: [opener, cli], kind: realized_by }
   # 逻辑 → 物理
   - { from: cli, to: p-bundle, kind: deployed_on }
   - { from: dash-client, to: p-bundle, kind: deployed_on }
@@ -90,6 +97,9 @@ mappings:
   - { from: context-gen, to: p-bundle, kind: deployed_on }
   - { from: setup-gen, to: p-bundle, kind: deployed_on }
   - { from: history-gen, to: p-bundle, kind: deployed_on }
+  - { from: statusline, to: p-bundle, kind: deployed_on }
+  - { from: live-server, to: p-bundle, kind: deployed_on }
+  - { from: opener, to: p-bundle, kind: deployed_on }
   - { from: pmdir, to: p-repo, kind: deployed_on }
 
 goals:
@@ -113,4 +123,11 @@ goals:
       - { step: AI 起草架构与条目, functional: f-guide }
       - { step: 会话开始注入上下文, functional: f-inject }
       - { step: 会话结束自动验收, functional: f-autorun }
-      - { step: 常驻面板实时看, functional: f-live-panel, slice: later }
+  - id: G3
+    name: 用户写代码时不用切出去，就能随时看到项目状态
+    requires: [f-statusline, f-open, f-live-map]
+    journey:
+      - { step: 开启状态栏, functional: f-statusline }
+      - { step: 一步打开地图, functional: f-open }
+      - { step: 打开地图，自动更新, functional: f-live-map }
+      - { step: 边写边看地图刷新, functional: f-live-map }

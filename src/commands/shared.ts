@@ -16,6 +16,8 @@ export interface CliIo {
   isInteractive?: () => boolean;
   /** 在终端里向人提问，返回输入的一行；无法提问时返回 null */
   prompt?: (question: string) => string | null;
+  /** 用系统默认程序打开文件（pm open 用）；没有时只输出路径 */
+  openPath?: (target: string) => { ok: boolean; error?: string };
 }
 
 export type Command = (args: readonly string[], io: CliIo) => number;
@@ -181,7 +183,7 @@ export const withPmLock = <T>(paths: PmPaths, fn: () => T): T => {
   }
 };
 
-const GITIGNORE_ENTRIES = ["current.json", "last-run.log", "trusted-runners", ".lock", "*.tmp", "history/"];
+const GITIGNORE_ENTRIES = ["current.json", "last-run.log", "trusted-runners", ".lock", "*.tmp", "history/", "dashboard-data.js"];
 
 /** 确保 .pm/.gitignore 里有本机文件，不覆盖用户已有的条目 */
 export const ensureGitignore = (paths: PmPaths): void => {

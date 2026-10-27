@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import type { Analysis } from "../analyze.js";
 
 /** 浏览器端脚本，按顺序拼进同一个闭包；后面的文件可以使用前面定义的函数 */
-const DASHBOARD_CLIENT = ["util.js", "map.js", "blockers.js", "goals.js", "cost.js", "blueprint.js", "main.js"] as const;
+const DASHBOARD_CLIENT = ["util.js", "map.js", "blockers.js", "goals.js", "cost.js", "blueprint.js", "live.js", "main.js"] as const;
 const CLIENT_DIR = new URL("./client/", import.meta.url);
 
 const readClient = (name: string): string => readFileSync(new URL(name, CLIENT_DIR), "utf8");
@@ -26,7 +26,24 @@ export const toPlainData = (analysis: Analysis): Omit<Analysis, "cost"> & { cost
 export interface PageLinks {
   crumb?: { href: string; label: string; title: string; detail: string };
   history?: string;
+  /** pm serve 提供的页面：数据版本号；页面据此订阅更新 */
+  live?: string;
+  /** 不跑服务器的实时：同目录数据脚本的文件名与当前版本；页面定时重新加载它 */
+  liveFile?: LiveFile;
 }
+
+export interface LiveFile {
+  file: string;
+  version: string;
+}
+
+/** 数据版本号：不含生成时间，内容没变时版本不变，页面不会白白重绘 */
+export const dataVersion = (data: { generatedAt?: unknown }): string =>
+  createHash("sha256").update(JSON.stringify({ ...data, generatedAt: null })).digest("hex").slice(0, 12);
+
+/** 同目录数据脚本的内容：调用页面注册的 window.__pmLive */
+export const liveDataScript = (version: string, data: unknown): string =>
+  `window.__pmLive && window.__pmLive(${JSON.stringify(version)}, ${serializeForScript(data)});\n`;
 
 const crumbHtml = (crumb: PageLinks["crumb"]): string => (crumb
   ? `<nav class="crumb" aria-label="位置"><a href="${escapeHtml(crumb.href)}">${escapeHtml(crumb.label)}</a><span><b>${escapeHtml(crumb.title)}</b>${escapeHtml(crumb.detail)}</span></nav>`
@@ -91,9 +108,13 @@ const dashboardSections = (links: PageLinks): string => `${crumbHtml(links.crumb
 <footer>本页离线可用 · 由 ai-pm-engine 生成</footer>`;
 
 /** 只允许本页这一段脚本执行；数据块是 application/json，不会被执行 */
-const contentSecurityPolicy = (script: string): string => {
+/**
+ * 只允许本页这一段内嵌脚本执行。两种实时模式各多开放一项：
+ * pm serve 的页面要连回同源服务（connect-src 'self'）；本地文件页要加载同目录的数据脚本（script-src 'self'）
+ */
+const contentSecurityPolicy = (script: string, live: boolean, liveFile: boolean): string => {
   const hash = createHash("sha256").update(script).digest("base64");
-  return `default-src 'none'; script-src 'sha256-${hash}'; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'`;
+  return `default-src 'none'; script-src 'sha256-${hash}'${liveFile ? " 'self'" : ""}; style-src 'unsafe-inline'; img-src data:;${live ? " connect-src 'self';" : ""} base-uri 'none'; form-action 'none'`;
 };
 
 export interface PageSpec {
@@ -102,7 +123,14 @@ export interface PageSpec {
   body: string;
   data: unknown;
   client: readonly string[];
+  live?: string;
+  liveFile?: LiveFile;
 }
+
+const liveMeta = (spec: PageSpec): string => [
+  spec.live !== undefined ? `\n<meta name="pm-live" content="${escapeHtml(spec.live)}">` : "",
+  spec.liveFile ? `\n<meta name="pm-live-file" content="${escapeHtml(spec.liveFile.file)}" data-version="${escapeHtml(spec.liveFile.version)}">` : "",
+].join("");
 
 /** 生成单文件、离线可打开的页面：样式、脚本、数据全部内嵌 */
 export const renderPage = (spec: PageSpec): string => {
@@ -113,7 +141,7 @@ export const renderPage = (spec: PageSpec): string => {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="${contentSecurityPolicy(script)}">
+<meta http-equiv="Content-Security-Policy" content="${contentSecurityPolicy(script, spec.live !== undefined, spec.liveFile !== undefined)}">${liveMeta(spec)}
 <title>${escapeHtml(spec.title)}</title>
 <style>
 ${readClient("dashboard.css")}
@@ -130,4 +158,4 @@ ${readClient("dashboard.css")}
 };
 
 export const renderDashboard = (analysis: Analysis, links: PageLinks = {}): string =>
-  renderPage({ title: `${analysis.project} · 项目地图`, body: dashboardSections(links), data: toPlainData(analysis), client: DASHBOARD_CLIENT });
+  renderPage({ title: `${analysis.project} · 项目地图`, body: dashboardSections(links), data: toPlainData(analysis), client: DASHBOARD_CLIENT, live: links.live, liveFile: links.liveFile });

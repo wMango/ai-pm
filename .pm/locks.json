@@ -352,5 +352,40 @@
     "runners": {
       "ops/health/git-tool.sh": "bash {file}"
     }
+  },
+  "statusline": {
+    "lockedAt": "2026-10-27T09:22:27.973Z",
+    "by": "ai",
+    "files": {
+      ".pm/acceptance/statusline.feature": "d621b03d6611b5226aef8054073c7899a2b990bbd9cddf905a1b6e6f5ef53db4",
+      "tests/live/statusline.test.ts": "269e7d4af1bfd6a733efe7c52096ee38766f9bf919db7af8fdfaacc89c830583"
+    },
+    "runners": {
+      "tests/live/statusline.test.ts": "npx vitest run {file}"
+    }
+  },
+  "live-server": {
+    "lockedAt": "2026-10-27T09:22:27.973Z",
+    "by": "ai",
+    "files": {
+      ".pm/acceptance/live-server.feature": "4907bfdb4024dbe9cb409841ec3ebd0a05c9108996822997943d6648e92502e2",
+      "tests/live/serve.test.ts": "0d9915c449ad198d7eb3b851ccbb6b103944e751325db8b8639dcd27c6a61d28",
+      "tests/live/live-dom.test.ts": "ffcbd8f161f63f128abc4e3360584113f91d124c2cef594d920b4e8b45238ece"
+    },
+    "runners": {
+      "tests/live/serve.test.ts": "npx vitest run {file}",
+      "tests/live/live-dom.test.ts": "npx vitest run {file}"
+    }
+  },
+  "opener": {
+    "lockedAt": "2026-10-27T09:44:47.761Z",
+    "by": "ai",
+    "files": {
+      ".pm/acceptance/opener.feature": "cf06092d7969807ad7d9c28242e35691106cec79e631120c2f64dfb32c7644ba",
+      "tests/live/open.test.ts": "a76be6f0d009a0fea59573fa188e697aa1919f8427b7b807561f1ac86c8390ee"
+    },
+    "runners": {
+      "tests/live/open.test.ts": "npx vitest run {file}"
+    }
   }
 }
