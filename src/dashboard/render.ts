@@ -49,6 +49,7 @@ const SECTIONS = `
         </div>
         <div class="legend" id="legend"></div>
       </div>
+      <p class="map-hint" id="map-hint" hidden></p>
       <div class="scroll-x"><svg id="map-svg" role="img" aria-label="架构地图"></svg></div>
     </div>
     <aside class="card panel" id="panel" aria-live="polite"></aside>

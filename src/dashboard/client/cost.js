@@ -2,6 +2,10 @@
 const COST = { X0: 80, X1: 640, Y0: 300, Y1: 24, WIDTH: 680, HEIGHT: 360 };
 const LABEL_GAP = 16;
 const CHAR_W = 12;
+/** 气泡太多时只给投入最多的几个和卡住的写名字，其余悬停查看 */
+const LABEL_LIMIT = 10;
+/** 气泡多时缩小最大半径，减少互相遮挡 */
+const BUBBLE = { MIN_R: 8, MAX_R: 26, CROWDED_MAX_R: 14, CROWDED_AT: 15 };
 
 /** 取 1/2/5 × 10^n 的整齐上限，便于刻度阅读 */
 const niceCeil = (value) => {
@@ -18,7 +22,8 @@ const renderCostChart = (ctx, spent) => {
   const maxTokens = niceCeil(Math.max(...spent.map((n) => n.tokens)) * 1.1);
   const sx = (d) => X0 + (d / maxDays) * (X1 - X0);
   const sy = (t) => Y0 - (t / maxTokens) * (Y0 - Y1);
-  const radius = (t) => 8 + Math.sqrt(t / maxTokens) * 26;
+  const maxR = spent.length > BUBBLE.CROWDED_AT ? BUBBLE.CROWDED_MAX_R : BUBBLE.MAX_R;
+  const radius = (t) => BUBBLE.MIN_R + Math.sqrt(t / maxTokens) * maxR;
   root.replaceChildren();
   root.setAttribute("viewBox", `0 0 ${COST.WIDTH} ${COST.HEIGHT}`);
   root.style.minWidth = "560px";
@@ -37,10 +42,13 @@ const renderCostChart = (ctx, spent) => {
   root.appendChild(txt(sx(stuckDays) + 8, Y0 - 10, `${stuckDays} 天预警线`, { fill: "var(--break)", "font-weight": 700 }));
   const stuck = new Set(ctx.data.cost.stuck);
   const placed = [];
+  const labeled = new Set([...[...spent].sort((a, b) => b.tokens - a.tokens).slice(0, LABEL_LIMIT).map((n) => n.id), ...stuck]);
   /** 简单避让：标签与已放置的标签重叠时向上挪 */
   const labelY = (x1, x2, y) => {
     let ty = y;
     while (placed.some((p) => x1 < p.x2 && x2 > p.x1 && Math.abs(ty - p.y) < LABEL_GAP)) ty -= LABEL_GAP;
+    // 挤出图表上沿就不写了，名字仍在悬停提示里
+    if (ty < Y1) return null;
     placed.push({ x1, x2, y: ty });
     return ty;
   };
@@ -52,16 +60,17 @@ const renderCostChart = (ctx, spent) => {
     const label = `${clip(n.name, 8)}${stuck.has(n.id) ? " · 卡住" : ""}`;
     const lw = label.length * CHAR_W;
     const lx = above ? cx : cx + r + 6;
-    const ly = labelY(above ? cx - lw / 2 : lx, above ? cx + lw / 2 : lx + lw, above ? cy - r - 12 : cy + 4);
+    const ly = labeled.has(n.id) ? labelY(above ? cx - lw / 2 : lx, above ? cx + lw / 2 : lx + lw, above ? cy - r - 12 : cy + 4) : null;
     root.appendChild(svg("g", { class: "node", "data-jump": n.id, tabindex: 0, role: "button", "aria-label": `${n.name}：${wan(n.tokens)} token，${n.days.toFixed(1)} 天` }, [
       svg("title", {}, [n.name]),
       stuck.has(n.id) ? svg("circle", { cx, cy, r: r + 8, fill: "none", stroke: "var(--break)", "stroke-width": 2, class: "pulse" }) : null,
       svg("circle", { class: "bubble", cx, cy, r, fill: meta.tint, stroke: meta.color, "stroke-width": 2.4, "stroke-dasharray": meta.dashed ? "5 4" : null }),
-      txt(lx, ly, label, { "text-anchor": above ? "middle" : "start", "font-weight": 700, fill: "var(--ink)" }),
+      ly !== null ? txt(lx, ly, label, { "text-anchor": above ? "middle" : "start", "font-weight": 700, fill: "var(--ink)" }) : null,
     ]));
   });
   const idle = ctx.data.nodes.filter((n) => !n.tokens).length;
-  root.appendChild(txt(X0, Y0 + 48, `尚未投入的模块：${idle} 个 · 气泡大小 ∝ token`, { fill: "var(--ink-3)" }));
+  const unlabeled = spent.length - placed.length;
+  root.appendChild(txt(X0, Y0 + 48, `尚未投入的模块：${idle} 个 · 气泡大小 ∝ token${unlabeled > 0 ? ` · 另有 ${unlabeled} 个气泡悬停查看名称` : ""}`, { fill: "var(--ink-3)" }));
 };
 
 const renderCostSide = (ctx) => {
@@ -71,15 +80,17 @@ const renderCostSide = (ctx) => {
   let x = 0;
   const stacked = svg("svg", { viewBox: "0 0 260 16", preserveAspectRatio: "none", style: "width:100%;height:16px", role: "img", "aria-label": "按状态分布" },
     states.map((s) => { const w = (c.byState[s] / c.totalTokens) * 260; const r = svg("rect", { x, width: Math.max(w - 2, 0), height: 16, rx: 4, fill: STATE_META[s].color }); x += w; return r; }));
+  // id 来自项目数据，可能是 constructor 之类的名字：只读自有属性
+  const goalTokens = (id) => (Object.hasOwn(c.byGoal, id) ? c.byGoal[id] : 0);
   const goalRows = ctx.data.goals.map((g) => el("div", { style: "display:grid;grid-template-columns:40px 1fr 60px;gap:8px;align-items:center;font-size:.8rem" }, [
     el("b", { class: "mono" }, [g.id]),
     svg("svg", { viewBox: "0 0 100 10", preserveAspectRatio: "none", style: "width:100%;height:10px" }, [
       svg("rect", { width: 100, height: 10, rx: 3, fill: "var(--paper-2)" }),
-      svg("rect", { width: ((c.byGoal[g.id] || 0) / c.totalTokens) * 100, height: 10, rx: 3, fill: "var(--ink)" }),
+      svg("rect", { width: (goalTokens(g.id) / c.totalTokens) * 100, height: 10, rx: 3, fill: "var(--ink)" }),
     ]),
-    el("span", { class: "mono", style: "text-align:right" }, [wan(c.byGoal[g.id] || 0)]),
+    el("span", { class: "mono", style: "text-align:right" }, [wan(goalTokens(g.id))]),
   ]));
-  document.getElementById("cost-side").replaceChildren(
+  fill(document.getElementById("cost-side"), [
     el("div", { class: "kpi-label", style: "margin-top:0" }, ["累计消耗 token"]), el("div", { class: "kpi" }, [wan(c.totalTokens)]),
     el("div", { style: "display:flex;gap:12px;align-items:center;margin-top:14px" }, [
       ring(sunk, "var(--blocked)", 80, "沉没成本占比"),
@@ -90,7 +101,7 @@ const renderCostSide = (ctx) => {
     goalRows.length ? el("div", { class: "kpi-label" }, ["按目标（共享模块重复计入）"]) : null, ...goalRows,
     c.stuck.length ? el("div", { class: "callout", style: "margin-top:12px" }, [el("b", {}, ["卡住预警："]), jumpChips(ctx, c.stuck)]) : null,
     c.unassignedTokens ? el("div", { class: "kpi-label" }, [`另有 ${wan(c.unassignedTokens)} token 未归属任何模块（会话里没有先 pm start）`]) : null,
-  );
+  ]);
 };
 
 const renderCost = (ctx) => {

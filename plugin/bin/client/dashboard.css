@@ -63,9 +63,17 @@ section { margin-top: 56px; scroll-margin-top: 64px; }
 .legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: .78rem; color: var(--ink-2); margin-left: auto; }
 .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -1px; margin-right: 5px; border: 2px solid; }
 .node { cursor: pointer; transition: opacity .3s var(--ease); }
-.node:focus-visible { outline: none; }
+.node:focus, .node:focus-visible { outline: none; }
 .node:focus-visible .body, .node:hover .body { stroke-width: 3.2; }
 .dim { opacity: .15; }
+.map-hint { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 0 0 10px; font-size: .8rem; color: var(--ink-2); }
+.map-hint[hidden] { display: none; }
+.fold .body { transition: stroke-width .2s var(--ease); }
+.chips details.more { display: contents; }
+.chips details.more[open] > summary { display: none; }
+.chips details.more summary { list-style: none; cursor: pointer; color: var(--ink-2); }
+.chips details.more summary::-webkit-details-marker { display: none; }
+.chips details.more summary:hover, .chips details.more summary:focus-visible { outline: 2px solid var(--doing); outline-offset: 1px; }
 .pulse { stroke-dasharray: 6 6; animation: flow 1.2s linear infinite; }
 @keyframes flow { to { stroke-dashoffset: -24; } }
 .panel { padding: 18px; display: flex; flex-direction: column; gap: 12px; align-self: start; }
@@ -94,6 +102,8 @@ button.chip:hover, button.chip:focus-visible { outline: 2px solid var(--doing); 
 .rec-row { display: grid; grid-template-columns: 120px 1fr; gap: 4px 12px; padding: 10px 0; border-bottom: 1px dashed var(--line); }
 .rec-row:last-child, .block-row:last-child { border-bottom: 0; }
 .block-row { display: grid; grid-template-columns: minmax(200px, 300px) 1fr; gap: 16px; padding: 12px 0; border-bottom: 1px dashed var(--line); }
+.more-rows > summary { cursor: pointer; padding: 12px 0 4px; font-size: .84rem; color: var(--ink-2); }
+.more-rows > summary:focus-visible { outline: 2px solid var(--doing); outline-offset: 2px; }
 .rec-name { font-weight: 900; font-size: .9rem; overflow-wrap: anywhere; }
 .rec-meta { grid-column: 2; font-size: .78rem; color: var(--ink-2); }
 .whatif { background: var(--ink); color: var(--card); }

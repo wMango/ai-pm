@@ -17,17 +17,20 @@ const renderHeader = (ctx) => {
 const initialView = (ctx) => ["logical", "functional", "physical"].find((v) => ctx.data.nodes.some((n) => n.view === v)) || "logical";
 
 const bindInteractions = (ctx, state) => {
-  const focusNode = (id) => {
-    const target = [...document.querySelectorAll("#map-svg g.node")].find((g) => g.getAttribute("data-id") === id);
+  const focusOn = (attr, value) => {
+    const target = [...document.querySelectorAll("#map-svg g.node")].find((g) => g.getAttribute(attr) === value);
     if (target) target.focus({ preventScroll: true });
   };
-  /** 重绘会替换节点，键盘焦点要找回原来的节点 */
+  const focusNode = (id) => focusOn("data-id", id);
+  /** 重绘会替换节点，键盘焦点要找回原来的节点（或那一叠收起的模块） */
   const redraw = () => {
     const active = document.activeElement;
-    const focusedId = active && active.closest && active.closest("#map-svg") ? active.getAttribute("data-id") : null;
+    const onMap = active && active.closest && active.closest("#map-svg");
+    const attr = onMap ? ["data-id", "data-fold"].find((a) => active.hasAttribute(a)) : null;
+    const value = attr ? active.getAttribute(attr) : null;
     renderMap(ctx, state);
     renderPanel(ctx, state);
-    if (focusedId) focusNode(focusedId);
+    if (attr) focusOn(attr, value);
   };
   const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const select = (id) => {
@@ -41,12 +44,35 @@ const bindInteractions = (ctx, state) => {
   document.querySelectorAll("[data-mode]").forEach((b) => b.addEventListener("click", () => { state.mode = b.getAttribute("data-mode"); redraw(); }));
   const mapSvg = document.getElementById("map-svg");
   const pickOnMap = (target) => {
+    const fold = target.closest && target.closest("g.fold[data-fold]");
+    if (fold) {
+      const key = fold.getAttribute("data-fold");
+      const next = new Set(state.expanded);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      state.expanded = next;
+      redraw();
+      return;
+    }
     const g = target.closest && target.closest("g.node[data-id]");
     const id = g ? g.getAttribute("data-id") : null;
     state.selected = id && id !== state.selected ? id : null;
     redraw();
   };
   mapSvg.addEventListener("click", (e) => pickOnMap(e.target));
+  const hint = document.getElementById("map-hint");
+  if (hint) hint.addEventListener("click", (e) => { if (e.target.closest("button")) { state.allEdges = !state.allEdges; redraw(); } });
+  // 画布宽度跟着容器走，容器变宽变窄时重新排版
+  let lastWidth = mapSvg.parentElement ? mapSvg.parentElement.clientWidth : 0;
+  let pending = false;
+  window.addEventListener("resize", () => {
+    if (pending) return;
+    pending = true;
+    requestAnimationFrame(() => {
+      pending = false;
+      const width = mapSvg.parentElement ? mapSvg.parentElement.clientWidth : 0;
+      if (width !== lastWidth) { lastWidth = width; redraw(); }
+    });
+  });
   const activate = (e) => {
     const jump = e.target.closest && e.target.closest("[data-jump]");
     if (jump) { e.preventDefault(); select(jump.getAttribute("data-jump")); return; }
@@ -70,7 +96,7 @@ const boot = () => {
     reportError("数据", error);
     return;
   }
-  const state = { view: initialView(ctx), mode: "effective", selected: null };
+  const state = { view: initialView(ctx), mode: "effective", selected: null, expanded: new Set(), allEdges: false };
   const steps = [
     ["页头", () => renderHeader(ctx)],
     ["架构地图", () => { renderMap(ctx, state); renderPanel(ctx, state); bindInteractions(ctx, state); }],

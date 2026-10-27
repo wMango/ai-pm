@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-Cccy5e0WHElKtW9Jqgys/uqBOI/jq3gBKoUYNcB1YUU='; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-P46go1FNdLarzG7J9wHPP7thMbpZ+QVkrbN7VU1ngfA='; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'">
 <title>智能知识库问答平台 · 项目地图</title>
 <style>
 :root {
@@ -71,9 +71,17 @@ section { margin-top: 56px; scroll-margin-top: 64px; }
 .legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: .78rem; color: var(--ink-2); margin-left: auto; }
 .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -1px; margin-right: 5px; border: 2px solid; }
 .node { cursor: pointer; transition: opacity .3s var(--ease); }
-.node:focus-visible { outline: none; }
+.node:focus, .node:focus-visible { outline: none; }
 .node:focus-visible .body, .node:hover .body { stroke-width: 3.2; }
 .dim { opacity: .15; }
+.map-hint { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 0 0 10px; font-size: .8rem; color: var(--ink-2); }
+.map-hint[hidden] { display: none; }
+.fold .body { transition: stroke-width .2s var(--ease); }
+.chips details.more { display: contents; }
+.chips details.more[open] > summary { display: none; }
+.chips details.more summary { list-style: none; cursor: pointer; color: var(--ink-2); }
+.chips details.more summary::-webkit-details-marker { display: none; }
+.chips details.more summary:hover, .chips details.more summary:focus-visible { outline: 2px solid var(--doing); outline-offset: 1px; }
 .pulse { stroke-dasharray: 6 6; animation: flow 1.2s linear infinite; }
 @keyframes flow { to { stroke-dashoffset: -24; } }
 .panel { padding: 18px; display: flex; flex-direction: column; gap: 12px; align-self: start; }
@@ -102,6 +110,8 @@ button.chip:hover, button.chip:focus-visible { outline: 2px solid var(--doing); 
 .rec-row { display: grid; grid-template-columns: 120px 1fr; gap: 4px 12px; padding: 10px 0; border-bottom: 1px dashed var(--line); }
 .rec-row:last-child, .block-row:last-child { border-bottom: 0; }
 .block-row { display: grid; grid-template-columns: minmax(200px, 300px) 1fr; gap: 16px; padding: 12px 0; border-bottom: 1px dashed var(--line); }
+.more-rows > summary { cursor: pointer; padding: 12px 0 4px; font-size: .84rem; color: var(--ink-2); }
+.more-rows > summary:focus-visible { outline: 2px solid var(--doing); outline-offset: 2px; }
 .rec-name { font-weight: 900; font-size: .9rem; overflow-wrap: anywhere; }
 .rec-meta { grid-column: 2; font-size: .78rem; color: var(--ink-2); }
 .whatif { background: var(--ink); color: var(--card); }
@@ -155,6 +165,7 @@ footer { margin-top: 56px; text-align: center; color: var(--ink-3); font-size: .
         </div>
         <div class="legend" id="legend"></div>
       </div>
+      <p class="map-hint" id="map-hint" hidden></p>
       <div class="scroll-x"><svg id="map-svg" role="img" aria-label="架构地图"></svg></div>
     </div>
     <aside class="card panel" id="panel" aria-live="polite"></aside>
@@ -203,6 +214,8 @@ const append = (node, children) => {
     .forEach((c) => node.appendChild(typeof c === "string" || typeof c === "number" ? document.createTextNode(String(c)) : c));
   return node;
 };
+/** 清空后再放入子节点；和 append 一样跳过 null，避免 replaceChildren 把 null 显示成文字 */
+const fill = (node, children) => { node.replaceChildren(); return append(node, children); };
 const svg = (tag, attrs = {}, children = []) => {
   const node = document.createElementNS(SVG_NS, tag);
   Object.entries(attrs).forEach(([k, v]) => { if (v !== undefined && v !== null) node.setAttribute(k, String(v)); });
@@ -247,14 +260,19 @@ const loadData = () => {
 };
 
 // ---------- ① 架构地图 + 模块详情面板 ----------
-const MAP = { NODE_W: 150, NODE_H: 46, GAP_X: 34, ROW_H: 112, LABEL_W: 96, TOP: 64, MIN_W: 720, NAME_MAX: 9 };
+// 节点尺寸固定、画布跟着容器宽度走：层里放不下就折行，而不是把整张图缩小到看不清
+const MAP = { NODE_W: 150, NODE_H: 46, GAP_X: 34, LINE_H: 74, BAND_PAD: 22, BAND_GAP: 10, LABEL_W: 96, TOP: 8, MIN_W: 720, FALLBACK_W: 1000, NAME_MAX: 9 };
+/** 一层超过这么多行就把已生效的模块收成一叠；可见连线超过这么多条就只画关键连线 */
+const CROWD = { FOLD_LINES: 2, EDGE_LIMIT: 30 };
 const LAYER_ORDER = ["front", "service", "data", "external"];
+/** 拥挤时层内排序：问题在前，已生效在后 */
+const STATE_RANK = { blocked: 0, doing: 1, todo: 2, ok: 3 };
 
 /** 逻辑视图按分层排行；功能 / 物理视图按依赖深度排行（被依赖的在下） */
 const rowsOf = (ctx, view) => {
   const ids = ctx.data.nodes.filter((n) => n.view === view).map((n) => n.id);
   if (view === "logical") {
-    return LAYER_ORDER.map((layer) => ({ label: LAYER_LABEL[layer], ids: ids.filter((id) => ctx.node(id).layer === layer) }))
+    return LAYER_ORDER.map((layer) => ({ key: `${view}:${layer}`, label: LAYER_LABEL[layer], ids: ids.filter((id) => ctx.node(id).layer === layer) }))
       .filter((r) => r.ids.length);
   }
   const memo = new Map();
@@ -269,20 +287,55 @@ const rowsOf = (ctx, view) => {
   };
   const maxLevel = Math.max(0, ...ids.map((id) => level(id)));
   return Array.from({ length: maxLevel + 1 }, (_, i) => maxLevel - i)
-    .map((lv, i) => ({ label: `第 ${i + 1} 层`, ids: ids.filter((id) => level(id) === lv) }))
+    .map((lv, i) => ({ key: `${view}:${lv}`, label: `第 ${i + 1} 层`, ids: ids.filter((id) => level(id) === lv) }))
     .filter((r) => r.ids.length);
 };
 
-const layoutOf = (ctx, view) => {
-  const rows = rowsOf(ctx, view);
+const stateIn = (ctx, id, mode) => {
+  const n = ctx.node(id);
+  if (mode === "built") return n.status === "done" ? "ok" : n.status;
+  return n.state;
+};
+
+/** 一行放得下就保持声明顺序；放不下时问题优先，超过两行再把健康模块收起来 */
+const arrangeRow = (ctx, row, state, cols) => {
+  if (row.ids.length <= cols) return { ids: row.ids, folded: [], foldable: false };
+  const rank = (id) => STATE_RANK[stateIn(ctx, id, state.mode)];
+  const ranked = [...row.ids].sort((a, b) => rank(a) - rank(b));
+  const healthy = ranked.filter((id) => rank(id) === STATE_RANK.ok && id !== state.selected);
+  const foldable = row.ids.length > cols * CROWD.FOLD_LINES && healthy.length > 1;
+  if (!foldable || state.expanded.has(row.key)) return { ids: ranked, folded: [], foldable };
+  return { ids: ranked.filter((id) => !healthy.includes(id)), folded: healthy, foldable };
+};
+
+const layoutOf = (ctx, state, available) => {
+  const width = Math.max(MAP.MIN_W, available);
   const step = MAP.NODE_W + MAP.GAP_X;
-  const width = Math.max(MAP.MIN_W, MAP.LABEL_W + Math.max(1, ...rows.map((r) => r.ids.length)) * step + 20);
+  const cols = Math.max(2, Math.floor((width - MAP.LABEL_W - 10) / step));
   const pos = new Map();
-  rows.forEach((row, i) => {
-    const start = MAP.LABEL_W + (width - MAP.LABEL_W - row.ids.length * step) / 2 + step / 2;
-    row.ids.forEach((id, j) => pos.set(id, { x: start + j * step, y: MAP.TOP + i * MAP.ROW_H }));
+  const folds = [];
+  let top = MAP.TOP;
+  const rows = rowsOf(ctx, state.view).map((row) => {
+    const items = arrangeRow(ctx, row, state, cols);
+    const slots = [...items.ids, ...(items.foldable ? [null] : [])];
+    const lines = Math.ceil(slots.length / cols);
+    const height = MAP.BAND_PAD * 2 + MAP.NODE_H + (lines - 1) * MAP.LINE_H;
+    slots.forEach((id, k) => {
+      const line = Math.floor(k / cols);
+      const count = Math.min(cols, slots.length - line * cols);
+      const x = MAP.LABEL_W + (width - MAP.LABEL_W - count * step) / 2 + step / 2 + (k % cols) * step;
+      const p = { x, y: top + MAP.BAND_PAD + MAP.NODE_H / 2 + line * MAP.LINE_H };
+      if (id) pos.set(id, p);
+      else folds.push({ ...p, key: row.key, ids: items.folded, open: !items.folded.length, total: row.ids.length });
+    });
+    const band = { ...row, top, height };
+    top += height + MAP.BAND_GAP;
+    return band;
   });
-  return { rows, pos, width, height: MAP.TOP + rows.length * MAP.ROW_H - 30 };
+  // 收起的模块，连线落在那一叠上
+  const anchor = new Map(pos);
+  folds.forEach((f) => f.ids.forEach((id) => anchor.set(id, f)));
+  return { rows, pos, folds, anchor, width, height: top };
 };
 
 const closureWithin = (start, next) => {
@@ -292,17 +345,14 @@ const closureWithin = (start, next) => {
   return seen;
 };
 
-const stateIn = (ctx, id, mode) => {
-  const n = ctx.node(id);
-  if (mode === "built") return n.status === "done" ? "ok" : n.status;
-  return n.state;
-};
-
 const edgePath = (a, b) => {
   const { NODE_W: W, NODE_H: H } = MAP;
   if (Math.abs(a.y - b.y) < 1) {
     const dir = b.x > a.x ? 1 : -1;
-    return `M${a.x + (dir * W) / 2},${a.y} L${b.x - dir * (W / 2 + 6)},${b.y}`;
+    if (Math.abs(b.x - a.x) <= W + MAP.GAP_X + 1) return `M${a.x + (dir * W) / 2},${a.y} L${b.x - dir * (W / 2 + 6)},${b.y}`;
+    // 同一行隔着别的节点：从上方绕过去，不穿过中间的模块
+    const sy = a.y - H / 2;
+    return `M${a.x},${sy} C${a.x},${sy - 26} ${b.x},${sy - 26} ${b.x},${sy - 6}`;
   }
   const down = b.y > a.y;
   const sy = a.y + (down ? H / 2 : -H / 2);
@@ -311,20 +361,36 @@ const edgePath = (a, b) => {
   return `M${a.x},${sy} C${a.x},${my} ${b.x},${my} ${b.x},${ty}`;
 };
 
-const drawEdges = (ctx, root, layout, state, focus) => {
-  layout.pos.forEach((from, id) => {
+/** 收集可见连线；太密时只保留关键连线：选中模块的链路，否则只留断开的依赖 */
+const edgesOf = (ctx, layout, state, focus) => {
+  const all = new Map();
+  layout.anchor.forEach((from, id) => {
     ctx.depsOf(id).forEach((e) => {
-      const to = layout.pos.get(e.to);
-      if (!to) return;
+      const to = layout.anchor.get(e.to);
+      if (!to || to === from) return;
       const broken = state.mode === "effective" && e.kind === "hard" && !ctx.node(e.to).effective;
-      const color = state.mode === "built" || e.kind === "soft" ? "var(--ink-3)" : broken ? "var(--break)" : "var(--ok)";
-      const marker = state.mode === "built" || e.kind === "soft" ? "arrow-muted" : broken ? "arrow-break" : "arrow-ok";
-      root.appendChild(svg("path", {
-        d: edgePath(from, to), fill: "none", stroke: color, "stroke-width": broken ? 2.4 : 2,
-        "stroke-dasharray": e.kind === "soft" ? "2 4" : broken ? "6 5" : null, "marker-end": `url(#${marker})`,
-        class: `${broken ? "pulse" : ""}${focus && !(focus.has(id) && focus.has(e.to)) ? " dim" : ""}`,
-      }));
+      const key = `${from.x},${from.y}>${to.x},${to.y}`;
+      const prev = all.get(key);
+      if (!prev || (broken && !prev.broken)) all.set(key, { id, to: e.to, kind: e.kind, broken, a: from, b: to });
     });
+  });
+  const edges = [...all.values()];
+  const dense = edges.length > CROWD.EDGE_LIMIT;
+  if (!dense || state.allEdges) return { edges, dense, hidden: 0 };
+  const kept = edges.filter((e) => (focus ? focus.has(e.id) && focus.has(e.to) : e.broken));
+  return { edges: kept, dense, hidden: edges.length - kept.length };
+};
+
+const drawEdges = (root, edges, state, focus) => {
+  edges.forEach((e) => {
+    const muted = state.mode === "built" || e.kind === "soft";
+    const color = muted ? "var(--ink-3)" : e.broken ? "var(--break)" : "var(--ok)";
+    const marker = muted ? "arrow-muted" : e.broken ? "arrow-break" : "arrow-ok";
+    root.appendChild(svg("path", {
+      d: edgePath(e.a, e.b), fill: "none", stroke: color, "stroke-width": e.broken ? 2.4 : 2,
+      "stroke-dasharray": e.kind === "soft" ? "2 4" : e.broken ? "6 5" : null, "marker-end": `url(#${marker})`,
+      class: `${e.broken ? "pulse" : ""}${focus && !(focus.has(e.id) && focus.has(e.to)) ? " dim" : ""}`,
+    }));
   });
 };
 
@@ -351,12 +417,45 @@ const drawNode = (ctx, root, id, p, state, focus) => {
   ]));
 };
 
+/** 收起的健康模块画成一叠卡片；展开后变成"收起"按钮 */
+const drawFold = (ctx, root, fold, state, focus) => {
+  const { NODE_W: W, NODE_H: H } = MAP;
+  const word = state.mode === "built" ? "已完成" : "已生效";
+  const label = fold.open ? `▴ 收起${word}` : `${fold.ids.length} 个${word} ▸`;
+  const names = fold.ids.map((id) => ctx.node(id).name).join("、");
+  const faded = focus && !fold.ids.some((id) => focus.has(id));
+  root.appendChild(svg("g", {
+    class: `node fold${faded ? " dim" : ""}`, tabindex: 0, role: "button", "data-fold": fold.key, "aria-expanded": String(fold.open),
+    "aria-label": fold.open ? `收起这一层${word}的模块` : `展开 ${fold.ids.length} 个${word}的模块：${names}`,
+    transform: `translate(${fold.x - W / 2},${fold.y - H / 2})`,
+  }, [
+    svg("title", {}, [fold.open ? "收起" : names]),
+    ...(fold.open ? [] : [8, 4].map((d) => svg("rect", { x: d, y: -d, width: W, height: H, rx: 9, fill: "var(--ok-tint)", stroke: "var(--ok)", "stroke-width": 1.2, opacity: 0.6 }))),
+    svg("rect", { class: "body", width: W, height: H, rx: 9, fill: fold.open ? "var(--card)" : "var(--ok-tint)", stroke: "var(--ok)", "stroke-width": 2, "stroke-dasharray": fold.open ? "5 4" : null }),
+    txt(W / 2, H / 2 + 5, label, { "text-anchor": "middle", "font-size": 13, "font-weight": 700, fill: "var(--ok)" }),
+  ]));
+};
+
+const renderHint = (thin, mode, state) => {
+  const hint = document.getElementById("map-hint");
+  if (!hint) return;
+  hint.hidden = !thin.dense;
+  if (!thin.dense) return;
+  const kept = state.selected ? "只显示所选模块的上下游链路" : mode === "effective" ? "只显示断开的依赖（红线）" : "默认不画依赖连线";
+  hint.replaceChildren(
+    el("span", {}, [state.allEdges ? "已显示全部连线。" : `模块较多，${kept}；点击模块查看它的完整链路。`]),
+    el("button", { type: "button", class: "chip plain", "aria-pressed": String(state.allEdges) }, [state.allEdges ? "只看关键连线" : `显示全部连线（另有 ${thin.hidden} 条）`]),
+  );
+};
+
 const renderMap = (ctx, state) => {
   const root = document.getElementById("map-svg");
-  const layout = layoutOf(ctx, state.view);
+  const available = (root.parentElement && root.parentElement.clientWidth) || MAP.FALLBACK_W;
+  const layout = layoutOf(ctx, state, available);
   root.replaceChildren();
   root.setAttribute("viewBox", `0 0 ${layout.width} ${Math.max(layout.height, 140)}`);
-  root.style.minWidth = `${Math.min(layout.width, 900)}px`;
+  // 不允许缩小：放不下时横向滚动，字号始终可读
+  root.style.minWidth = `${layout.width}px`;
   const inView = state.selected && layout.pos.has(state.selected);
   const focus = inView ? new Set([
     ...closureWithin(state.selected, (x) => ctx.depsOf(x).map((e) => e.to)),
@@ -364,20 +463,33 @@ const renderMap = (ctx, state) => {
   ]) : null;
   root.appendChild(svg("defs", {}, [arrowMarker("arrow-ok", "var(--ok)"), arrowMarker("arrow-break", "var(--break)"), arrowMarker("arrow-muted", "var(--ink-3)")]));
   layout.rows.forEach((row, i) => {
-    const y = MAP.TOP + i * MAP.ROW_H;
-    root.appendChild(svg("rect", { x: 0, y: y - 50, width: layout.width, height: 100, rx: 10, fill: i % 2 ? "transparent" : "var(--paper-2)", opacity: 0.55 }));
-    root.appendChild(txt(16, y + 5, row.label, { "font-weight": 700, fill: "var(--ink-3)", "font-size": 13 }));
+    root.appendChild(svg("rect", { x: 0, y: row.top, width: layout.width, height: row.height, rx: 10, fill: i % 2 ? "transparent" : "var(--paper-2)", opacity: 0.55 }));
+    root.appendChild(txt(16, row.top + MAP.BAND_PAD + MAP.NODE_H / 2 + 5, row.label, { "font-weight": 700, fill: "var(--ink-3)", "font-size": 13 }));
+    if (row.ids.length > 1) root.appendChild(txt(16, row.top + MAP.BAND_PAD + MAP.NODE_H / 2 + 23, `${row.ids.length} 个`, { fill: "var(--ink-3)", "font-size": 11, "font-family": "var(--font-mono)" }));
   });
   if (!layout.rows.length) root.appendChild(txt(layout.width / 2, 80, `${VIEW_LABEL[state.view]}视图还没有节点`, { "text-anchor": "middle", fill: "var(--ink-3)" }));
-  drawEdges(ctx, root, layout, state, focus);
+  const thin = edgesOf(ctx, layout, state, focus);
+  drawEdges(root, thin.edges, state, focus);
   layout.pos.forEach((p, id) => drawNode(ctx, root, id, p, state, focus));
+  layout.folds.forEach((f) => drawFold(ctx, root, f, state, focus));
+  renderHint(thin, state.mode, state);
   document.querySelectorAll("[data-view]").forEach((b) => b.setAttribute("aria-pressed", String(b.getAttribute("data-view") === state.view)));
   document.querySelectorAll("[data-mode]").forEach((b) => b.setAttribute("aria-pressed", String(b.getAttribute("data-mode") === state.mode)));
 };
 
-const jumpChips = (ctx, ids, emptyText = "—") => el("div", { class: "chips" },
-  ids.length ? ids.map((id) => chip(`${ctx.node(id).name}${ctx.node(id).view !== "logical" ? `（${VIEW_LABEL[ctx.node(id).view]}）` : ""}`, ctx.node(id).state, { "data-jump": id }))
-    : [el("span", { class: "sub" }, [emptyText])]);
+/** 芯片太多时只露出前面几个，其余收进"+N" */
+const CHIP_LIMIT = 10;
+const jumpChips = (ctx, ids, emptyText = "—") => {
+  const one = (id) => chip(`${ctx.node(id).name}${ctx.node(id).view !== "logical" ? `（${VIEW_LABEL[ctx.node(id).view]}）` : ""}`, ctx.node(id).state, { "data-jump": id });
+  if (!ids.length) return el("div", { class: "chips" }, [el("span", { class: "sub" }, [emptyText])]);
+  if (ids.length <= CHIP_LIMIT) return el("div", { class: "chips" }, ids.map(one));
+  const shown = CHIP_LIMIT - 1;
+  return el("div", { class: "chips" }, [
+    ...ids.slice(0, shown).map(one),
+    el("details", { class: "more" }, [el("summary", { class: "chip plain" }, [`+${ids.length - shown} 个`]), el("div", { class: "chips" }, ids.slice(shown).map(one))]),
+  ]);
+};
+
 
 const renderPanel = (ctx, state) => {
   const root = document.getElementById("panel");
@@ -412,6 +524,8 @@ const renderPanel = (ctx, state) => {
 // ---------- ② 依赖与阻塞：哪些未完成模块卡住了最多已写好的模块 ----------
 // 卡住同一组模块的根因（通常是一条链）合并成一行，避免重复
 const VIEW_DEPTH = { physical: 0, logical: 1, functional: 2 };
+/** 只展开影响最大的几组，其余折叠 */
+const GROUP_LIMIT = 6;
 
 const groupRoots = (ctx) => {
   const tally = new Map();
@@ -435,7 +549,7 @@ const renderBlockers = (ctx) => {
     return;
   }
   const max = Math.max(...groups.map((g) => g.blocked.length));
-  root.replaceChildren(...groups.map((g, i) => el("div", { class: "block-row" }, [
+  const row = (g, i) => el("div", { class: "block-row" }, [
     el("div", {}, [el("div", { class: "row-label" }, [g.roots.length > 1 ? "根因链（先做左边）" : "根因"]), jumpChips(ctx, g.roots)]),
     el("div", {}, [
       svg("svg", { viewBox: "0 0 300 20", preserveAspectRatio: "none", style: "width:100%;height:20px", role: "img", "aria-label": `卡住 ${g.blocked.length} 个模块` }, [
@@ -445,7 +559,12 @@ const renderBlockers = (ctx) => {
       el("div", { class: "row-label", style: "margin-top:6px" }, [`卡住 ${g.blocked.length} 个已写好的模块`]),
       jumpChips(ctx, g.blocked),
     ]),
-  ])));
+  ]);
+  const rest = groups.slice(GROUP_LIMIT);
+  fill(root, [
+    ...groups.slice(0, GROUP_LIMIT).map(row),
+    rest.length ? el("details", { class: "more-rows" }, [el("summary", {}, [`还有 ${rest.length} 组影响较小的根因`]), ...rest.map((g, i) => row(g, i + GROUP_LIMIT))]) : null,
+  ]);
 };
 
 // ---------- ③ 目标缺口、下一步推荐、What-if ----------
@@ -524,6 +643,10 @@ const renderWhatIf = (ctx) => {
 const COST = { X0: 80, X1: 640, Y0: 300, Y1: 24, WIDTH: 680, HEIGHT: 360 };
 const LABEL_GAP = 16;
 const CHAR_W = 12;
+/** 气泡太多时只给投入最多的几个和卡住的写名字，其余悬停查看 */
+const LABEL_LIMIT = 10;
+/** 气泡多时缩小最大半径，减少互相遮挡 */
+const BUBBLE = { MIN_R: 8, MAX_R: 26, CROWDED_MAX_R: 14, CROWDED_AT: 15 };
 
 /** 取 1/2/5 × 10^n 的整齐上限，便于刻度阅读 */
 const niceCeil = (value) => {
@@ -540,7 +663,8 @@ const renderCostChart = (ctx, spent) => {
   const maxTokens = niceCeil(Math.max(...spent.map((n) => n.tokens)) * 1.1);
   const sx = (d) => X0 + (d / maxDays) * (X1 - X0);
   const sy = (t) => Y0 - (t / maxTokens) * (Y0 - Y1);
-  const radius = (t) => 8 + Math.sqrt(t / maxTokens) * 26;
+  const maxR = spent.length > BUBBLE.CROWDED_AT ? BUBBLE.CROWDED_MAX_R : BUBBLE.MAX_R;
+  const radius = (t) => BUBBLE.MIN_R + Math.sqrt(t / maxTokens) * maxR;
   root.replaceChildren();
   root.setAttribute("viewBox", `0 0 ${COST.WIDTH} ${COST.HEIGHT}`);
   root.style.minWidth = "560px";
@@ -559,10 +683,13 @@ const renderCostChart = (ctx, spent) => {
   root.appendChild(txt(sx(stuckDays) + 8, Y0 - 10, `${stuckDays} 天预警线`, { fill: "var(--break)", "font-weight": 700 }));
   const stuck = new Set(ctx.data.cost.stuck);
   const placed = [];
+  const labeled = new Set([...[...spent].sort((a, b) => b.tokens - a.tokens).slice(0, LABEL_LIMIT).map((n) => n.id), ...stuck]);
   /** 简单避让：标签与已放置的标签重叠时向上挪 */
   const labelY = (x1, x2, y) => {
     let ty = y;
     while (placed.some((p) => x1 < p.x2 && x2 > p.x1 && Math.abs(ty - p.y) < LABEL_GAP)) ty -= LABEL_GAP;
+    // 挤出图表上沿就不写了，名字仍在悬停提示里
+    if (ty < Y1) return null;
     placed.push({ x1, x2, y: ty });
     return ty;
   };
@@ -574,16 +701,17 @@ const renderCostChart = (ctx, spent) => {
     const label = `${clip(n.name, 8)}${stuck.has(n.id) ? " · 卡住" : ""}`;
     const lw = label.length * CHAR_W;
     const lx = above ? cx : cx + r + 6;
-    const ly = labelY(above ? cx - lw / 2 : lx, above ? cx + lw / 2 : lx + lw, above ? cy - r - 12 : cy + 4);
+    const ly = labeled.has(n.id) ? labelY(above ? cx - lw / 2 : lx, above ? cx + lw / 2 : lx + lw, above ? cy - r - 12 : cy + 4) : null;
     root.appendChild(svg("g", { class: "node", "data-jump": n.id, tabindex: 0, role: "button", "aria-label": `${n.name}：${wan(n.tokens)} token，${n.days.toFixed(1)} 天` }, [
       svg("title", {}, [n.name]),
       stuck.has(n.id) ? svg("circle", { cx, cy, r: r + 8, fill: "none", stroke: "var(--break)", "stroke-width": 2, class: "pulse" }) : null,
       svg("circle", { class: "bubble", cx, cy, r, fill: meta.tint, stroke: meta.color, "stroke-width": 2.4, "stroke-dasharray": meta.dashed ? "5 4" : null }),
-      txt(lx, ly, label, { "text-anchor": above ? "middle" : "start", "font-weight": 700, fill: "var(--ink)" }),
+      ly !== null ? txt(lx, ly, label, { "text-anchor": above ? "middle" : "start", "font-weight": 700, fill: "var(--ink)" }) : null,
     ]));
   });
   const idle = ctx.data.nodes.filter((n) => !n.tokens).length;
-  root.appendChild(txt(X0, Y0 + 48, `尚未投入的模块：${idle} 个 · 气泡大小 ∝ token`, { fill: "var(--ink-3)" }));
+  const unlabeled = spent.length - placed.length;
+  root.appendChild(txt(X0, Y0 + 48, `尚未投入的模块：${idle} 个 · 气泡大小 ∝ token${unlabeled > 0 ? ` · 另有 ${unlabeled} 个气泡悬停查看名称` : ""}`, { fill: "var(--ink-3)" }));
 };
 
 const renderCostSide = (ctx) => {
@@ -593,15 +721,17 @@ const renderCostSide = (ctx) => {
   let x = 0;
   const stacked = svg("svg", { viewBox: "0 0 260 16", preserveAspectRatio: "none", style: "width:100%;height:16px", role: "img", "aria-label": "按状态分布" },
     states.map((s) => { const w = (c.byState[s] / c.totalTokens) * 260; const r = svg("rect", { x, width: Math.max(w - 2, 0), height: 16, rx: 4, fill: STATE_META[s].color }); x += w; return r; }));
+  // id 来自项目数据，可能是 constructor 之类的名字：只读自有属性
+  const goalTokens = (id) => (Object.hasOwn(c.byGoal, id) ? c.byGoal[id] : 0);
   const goalRows = ctx.data.goals.map((g) => el("div", { style: "display:grid;grid-template-columns:40px 1fr 60px;gap:8px;align-items:center;font-size:.8rem" }, [
     el("b", { class: "mono" }, [g.id]),
     svg("svg", { viewBox: "0 0 100 10", preserveAspectRatio: "none", style: "width:100%;height:10px" }, [
       svg("rect", { width: 100, height: 10, rx: 3, fill: "var(--paper-2)" }),
-      svg("rect", { width: ((c.byGoal[g.id] || 0) / c.totalTokens) * 100, height: 10, rx: 3, fill: "var(--ink)" }),
+      svg("rect", { width: (goalTokens(g.id) / c.totalTokens) * 100, height: 10, rx: 3, fill: "var(--ink)" }),
     ]),
-    el("span", { class: "mono", style: "text-align:right" }, [wan(c.byGoal[g.id] || 0)]),
+    el("span", { class: "mono", style: "text-align:right" }, [wan(goalTokens(g.id))]),
   ]));
-  document.getElementById("cost-side").replaceChildren(
+  fill(document.getElementById("cost-side"), [
     el("div", { class: "kpi-label", style: "margin-top:0" }, ["累计消耗 token"]), el("div", { class: "kpi" }, [wan(c.totalTokens)]),
     el("div", { style: "display:flex;gap:12px;align-items:center;margin-top:14px" }, [
       ring(sunk, "var(--blocked)", 80, "沉没成本占比"),
@@ -612,7 +742,7 @@ const renderCostSide = (ctx) => {
     goalRows.length ? el("div", { class: "kpi-label" }, ["按目标（共享模块重复计入）"]) : null, ...goalRows,
     c.stuck.length ? el("div", { class: "callout", style: "margin-top:12px" }, [el("b", {}, ["卡住预警："]), jumpChips(ctx, c.stuck)]) : null,
     c.unassignedTokens ? el("div", { class: "kpi-label" }, [`另有 ${wan(c.unassignedTokens)} token 未归属任何模块（会话里没有先 pm start）`]) : null,
-  );
+  ]);
 };
 
 const renderCost = (ctx) => {
@@ -627,6 +757,8 @@ const renderCost = (ctx) => {
 
 // ---------- ⑤ 旅程蓝图：服务蓝图泳道 + 可用性曲线 + 故事地图切线 ----------
 const BP = { LABEL_W: 120, COL_W: 230, CHIP_W: 150, CHIP_H: 26, CHIP_GAP: 6, LANE_PAD: 18, CURVE_TOP: 20, CURVE_H: 60, USER_H: 70 };
+/** 每格泳道最多露出几个模块，多出来的收成"+N" */
+const LANE_MAX = 4;
 const BP_LANES = [["front", "前台"], ["back", "后台"], ["support", "支撑系统"]];
 const BP_LINES = ["交互线", "可见线 · 用户看不到以下", "内部交互线"];
 const STEP_STYLE = {
@@ -641,7 +773,7 @@ const laneGeometry = (bp) => {
   const user = { top: y, bottom: y + BP.USER_H };
   y = user.bottom + 12;
   const lanes = BP_LANES.map(([key, label]) => {
-    const count = Math.max(1, ...bp.steps.map((s) => s.lanes[key].length));
+    const count = Math.max(1, ...bp.steps.map((s) => Math.min(LANE_MAX, s.lanes[key].length)));
     const height = count * (BP.CHIP_H + BP.CHIP_GAP) + BP.LANE_PAD * 2;
     const lane = { key, label, top: y, bottom: y + height };
     y = lane.bottom + 12;
@@ -664,16 +796,36 @@ const drawLaneFrame = (root, geo, width) => {
   });
 };
 
+/** 一格放不下时：根因排最前，其次是有问题的模块，其余收起 */
+const laneSlots = (ctx, ids, rootId) => {
+  if (ids.length <= LANE_MAX) return { shown: ids, hidden: [] };
+  const rank = (id) => (id === rootId ? -1 : STATE_RANK[ctx.node(id).state]);
+  const ranked = [...ids].sort((a, b) => rank(a) - rank(b));
+  return { shown: ranked.slice(0, LANE_MAX - 1), hidden: ranked.slice(LANE_MAX - 1) };
+};
+
+const drawOverflow = (ctx, group, hidden, cx, y) => {
+  const names = hidden.map((id) => ctx.node(id).name).join("、");
+  group.appendChild(svg("g", { "aria-label": `另有 ${hidden.length} 个模块：${names}`, role: "img", transform: `translate(${cx - BP.CHIP_W / 2},${y - BP.CHIP_H / 2})` }, [
+    svg("title", {}, [names]),
+    svg("rect", { width: BP.CHIP_W, height: BP.CHIP_H, rx: 7, fill: "var(--card)", stroke: "var(--ink-3)", "stroke-dasharray": "4 4" }),
+    txt(BP.CHIP_W / 2, 17, `+${hidden.length} 个模块`, { "text-anchor": "middle", fill: "var(--ink-2)" }),
+  ]));
+};
+
 const drawStep = (ctx, root, step, i, geo) => {
   const cx = BP.LABEL_W + BP.COL_W * (i + 0.5);
   const style = STEP_STYLE[step.status];
   const group = svg("g", { class: "bp-step", "data-step": step.step, opacity: step.slice === "later" ? 0.5 : 1 });
   const positions = new Map();
   geo.lanes.forEach((lane) => {
-    const ids = step.lanes[lane.key];
+    const { shown, hidden } = laneSlots(ctx, step.lanes[lane.key], step.root);
+    const slots = shown.length + (hidden.length ? 1 : 0);
     const center = (lane.top + lane.bottom) / 2;
-    const total = ids.length * BP.CHIP_H + Math.max(0, ids.length - 1) * BP.CHIP_GAP;
-    ids.forEach((id, j) => positions.set(id, center - total / 2 + BP.CHIP_H / 2 + j * (BP.CHIP_H + BP.CHIP_GAP)));
+    const total = slots * BP.CHIP_H + Math.max(0, slots - 1) * BP.CHIP_GAP;
+    const slotY = (j) => center - total / 2 + BP.CHIP_H / 2 + j * (BP.CHIP_H + BP.CHIP_GAP);
+    shown.forEach((id, j) => positions.set(id, slotY(j)));
+    if (hidden.length) drawOverflow(ctx, group, hidden, cx, slotY(shown.length));
     if (step.status === "gap") {
       group.appendChild(svg("rect", { x: cx - BP.CHIP_W / 2, y: center - BP.CHIP_H / 2, width: BP.CHIP_W, height: BP.CHIP_H, rx: 7, fill: "none", stroke: "var(--blocked)", "stroke-dasharray": "4 4" }));
       group.appendChild(txt(cx, center + 4, "?", { "text-anchor": "middle", "font-weight": 900, fill: "var(--blocked)" }));
@@ -725,7 +877,7 @@ const renderBlueprints = (ctx) => {
     const goal = ctx.data.goals.find((g) => g.id === bp.goal);
     const geo = laneGeometry(bp);
     const width = BP.LABEL_W + bp.steps.length * BP.COL_W + 10;
-    const chart = svg("svg", { class: "bp", viewBox: `0 0 ${width} ${geo.height}`, role: "img", "aria-label": `${bp.goal} 旅程蓝图`, style: `min-width:${Math.min(width, 860)}px` });
+    const chart = svg("svg", { class: "bp", viewBox: `0 0 ${width} ${geo.height}`, role: "img", "aria-label": `${bp.goal} 旅程蓝图`, style: `min-width:${width}px` });
     drawLaneFrame(chart, geo, width);
     const points = bp.steps.map((s, i) => drawStep(ctx, chart, s, i, geo));
     drawCurve(chart, points);
@@ -754,17 +906,20 @@ const renderHeader = (ctx) => {
 const initialView = (ctx) => ["logical", "functional", "physical"].find((v) => ctx.data.nodes.some((n) => n.view === v)) || "logical";
 
 const bindInteractions = (ctx, state) => {
-  const focusNode = (id) => {
-    const target = [...document.querySelectorAll("#map-svg g.node")].find((g) => g.getAttribute("data-id") === id);
+  const focusOn = (attr, value) => {
+    const target = [...document.querySelectorAll("#map-svg g.node")].find((g) => g.getAttribute(attr) === value);
     if (target) target.focus({ preventScroll: true });
   };
-  /** 重绘会替换节点，键盘焦点要找回原来的节点 */
+  const focusNode = (id) => focusOn("data-id", id);
+  /** 重绘会替换节点，键盘焦点要找回原来的节点（或那一叠收起的模块） */
   const redraw = () => {
     const active = document.activeElement;
-    const focusedId = active && active.closest && active.closest("#map-svg") ? active.getAttribute("data-id") : null;
+    const onMap = active && active.closest && active.closest("#map-svg");
+    const attr = onMap ? ["data-id", "data-fold"].find((a) => active.hasAttribute(a)) : null;
+    const value = attr ? active.getAttribute(attr) : null;
     renderMap(ctx, state);
     renderPanel(ctx, state);
-    if (focusedId) focusNode(focusedId);
+    if (attr) focusOn(attr, value);
   };
   const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const select = (id) => {
@@ -778,12 +933,35 @@ const bindInteractions = (ctx, state) => {
   document.querySelectorAll("[data-mode]").forEach((b) => b.addEventListener("click", () => { state.mode = b.getAttribute("data-mode"); redraw(); }));
   const mapSvg = document.getElementById("map-svg");
   const pickOnMap = (target) => {
+    const fold = target.closest && target.closest("g.fold[data-fold]");
+    if (fold) {
+      const key = fold.getAttribute("data-fold");
+      const next = new Set(state.expanded);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      state.expanded = next;
+      redraw();
+      return;
+    }
     const g = target.closest && target.closest("g.node[data-id]");
     const id = g ? g.getAttribute("data-id") : null;
     state.selected = id && id !== state.selected ? id : null;
     redraw();
   };
   mapSvg.addEventListener("click", (e) => pickOnMap(e.target));
+  const hint = document.getElementById("map-hint");
+  if (hint) hint.addEventListener("click", (e) => { if (e.target.closest("button")) { state.allEdges = !state.allEdges; redraw(); } });
+  // 画布宽度跟着容器走，容器变宽变窄时重新排版
+  let lastWidth = mapSvg.parentElement ? mapSvg.parentElement.clientWidth : 0;
+  let pending = false;
+  window.addEventListener("resize", () => {
+    if (pending) return;
+    pending = true;
+    requestAnimationFrame(() => {
+      pending = false;
+      const width = mapSvg.parentElement ? mapSvg.parentElement.clientWidth : 0;
+      if (width !== lastWidth) { lastWidth = width; redraw(); }
+    });
+  });
   const activate = (e) => {
     const jump = e.target.closest && e.target.closest("[data-jump]");
     if (jump) { e.preventDefault(); select(jump.getAttribute("data-jump")); return; }
@@ -807,7 +985,7 @@ const boot = () => {
     reportError("数据", error);
     return;
   }
-  const state = { view: initialView(ctx), mode: "effective", selected: null };
+  const state = { view: initialView(ctx), mode: "effective", selected: null, expanded: new Set(), allEdges: false };
   const steps = [
     ["页头", () => renderHeader(ctx)],
     ["架构地图", () => { renderMap(ctx, state); renderPanel(ctx, state); bindInteractions(ctx, state); }],

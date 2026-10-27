@@ -1,0 +1,5 @@
+current.json
+last-run.log
+trusted-runners
+.lock
+*.tmp

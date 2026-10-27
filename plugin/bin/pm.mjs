@@ -273,6 +273,7 @@ ${o.join(`
         </div>
         <div class="legend" id="legend"></div>
       </div>
+      <p class="map-hint" id="map-hint" hidden></p>
       <div class="scroll-x"><svg id="map-svg" role="img" aria-label="\u67B6\u6784\u5730\u56FE"></svg></div>
     </div>
     <aside class="card panel" id="panel" aria-live="polite"></aside>

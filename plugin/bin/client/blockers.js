@@ -1,6 +1,8 @@
 // ---------- ② 依赖与阻塞：哪些未完成模块卡住了最多已写好的模块 ----------
 // 卡住同一组模块的根因（通常是一条链）合并成一行，避免重复
 const VIEW_DEPTH = { physical: 0, logical: 1, functional: 2 };
+/** 只展开影响最大的几组，其余折叠 */
+const GROUP_LIMIT = 6;
 
 const groupRoots = (ctx) => {
   const tally = new Map();
@@ -24,7 +26,7 @@ const renderBlockers = (ctx) => {
     return;
   }
   const max = Math.max(...groups.map((g) => g.blocked.length));
-  root.replaceChildren(...groups.map((g, i) => el("div", { class: "block-row" }, [
+  const row = (g, i) => el("div", { class: "block-row" }, [
     el("div", {}, [el("div", { class: "row-label" }, [g.roots.length > 1 ? "根因链（先做左边）" : "根因"]), jumpChips(ctx, g.roots)]),
     el("div", {}, [
       svg("svg", { viewBox: "0 0 300 20", preserveAspectRatio: "none", style: "width:100%;height:20px", role: "img", "aria-label": `卡住 ${g.blocked.length} 个模块` }, [
@@ -34,5 +36,10 @@ const renderBlockers = (ctx) => {
       el("div", { class: "row-label", style: "margin-top:6px" }, [`卡住 ${g.blocked.length} 个已写好的模块`]),
       jumpChips(ctx, g.blocked),
     ]),
-  ])));
+  ]);
+  const rest = groups.slice(GROUP_LIMIT);
+  fill(root, [
+    ...groups.slice(0, GROUP_LIMIT).map(row),
+    rest.length ? el("details", { class: "more-rows" }, [el("summary", {}, [`还有 ${rest.length} 组影响较小的根因`]), ...rest.map((g, i) => row(g, i + GROUP_LIMIT))]) : null,
+  ]);
 };

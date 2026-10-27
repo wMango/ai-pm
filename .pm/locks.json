@@ -1,0 +1,332 @@
+{
+  "loader": {
+    "lockedAt": "2026-10-27T01:02:27.178Z",
+    "by": "ai",
+    "files": {
+      ".pm/acceptance/loader.feature": "9b9616cddc9270216a5fc75bd6102b401de352ededb38e42383a7d689b9cc5d8",
+      "tests/acceptance/loader.test.ts": "8605cc2d6c35567126ffb66aad07ac3f179d314c031451c28f2370555f1e68e8"
+    },
+    "runners": {
+      "tests/acceptance/loader.test.ts": "npx vitest run {file}"
+    }
+  },
+  "pmdir": {
+    "lockedAt": "2026-10-27T01:03:57.681Z",
+    "by": "ai",
+    "files": {
+      ".pm/acceptance/pmdir.feature": "ef33f316f75d0e477bea68f3bc52aa4590985409e71cefd075866da910a719d0",
+      "tests/acceptance/pmdir.test.ts": "86816a8cd86b710c7dd181fbbe3e958f52d5ecaf61595b8e7ed053331bcbe1d4"
+    },
+    "runners": {
+      "tests/acceptance/pmdir.test.ts": "npx vitest run {file}"
+    }
+  },
+  "p-node": {
+    "lockedAt": "2026-10-27T01:03:57.681Z",
+    "by": "ai",
+    "files": {
+      ".pm/acceptance/p-node.feature": "7e831f50284fdb5e71baf8ebcd797ce05b9667af8de37236d8457e62ce02102d",
+      "ops/health/p-node.sh": "b9e74b2cf947c3579cf9fe6a66f0b5ff69409ed7b7f073515f0a3310ba0494ad"
+    },
+    "runners": {
+      "ops/health/p-node.sh": "bash {file}"
+    }
+  },
+  "p-repo": {
+    "lockedAt": "2026-10-27T01:03:57.681Z",
+    "by": "ai",
+    "files": {
+      ".pm/acceptance/p-repo.feature": "54917f6f62d62298e2c1d2af66c1cf45fdba49d01fc1ae33a819469cf19a5ede",
+      "ops/health/p-repo.sh": "4f2338b0257aa44764bb0389da6c86d3290fce25fe4c0f8448238db6a3c9d4a0"
+    },
+    "runners": {
+      "ops/health/p-repo.sh": "bash {file}"
+    }
+  },
+  "p-bundle": {
+    "lockedAt": "2026-10-27T01:03:57.681Z",
+    "by": "ai",
+    "files": {
+      ".pm/acceptance/p-bundle.feature": "d18f98d427dc6853b551498dc5d156259155d89a679ce3098715df1caac8eef4",
+      "ops/health/p-bundle.sh": "90ed5f6efa161238f36a6f47766ddfe9a08d53d2f6a816d27780ac8682899489"
+    },
+    "runners": {
+      "ops/health/p-bundle.sh": "bash {file}"
+    }
+  },
+  "cli": {
+    "lockedAt": "2026-10-27T03:16:28.233Z",
+    "by": "ai",
+    "files": {
+      ".pm/acceptance/cli.feature": "937743c09b3d74af34805a0e3c9089c2d1a31d9422a89090f03eb92a827fe7d1",
+      "tests/cli.test.ts": "52d536aee495bec9547bf8b0bed46de5abc6c6e8c4a149ebf801fee72a16843f"
+    },
+    "runners": {
+      "tests/cli.test.ts": "npx vitest run {file}"
+    }
+  },
+  "engine": {
+    "lockedAt": "2026-10-27T03:16:28.233Z",
+    "by": "ai",
+    "files": {
+      ".pm/acceptance/engine.feature": "bc9cc5529eaead79bc04ef14f8c7102c995ad5fc823c519785c824b4d649fdf1",
+      "tests/effective.test.ts": "1f8ed9c2d6dedfea1b0b0edf2cc8915933e9e63751cafdfc0f207d3e51942a1f"
+    },
+    "runners": {
+      "tests/effective.test.ts": "npx vitest run {file}"
+    }
+  },
+  "goals-calc": {
+    "lockedAt": "2026-10-27T03:16:28.233Z",
+    "by": "ai",
+    "files": {
+      ".pm/acceptance/goals-calc.feature": "81f6eddb35500414e8da5ba13e0c5e24ffa07270e34f6eccf0c357ec2e083beb",
+      "tests/goals.test.ts": "6db843ac2819a4a2919293559add6a6f97dd873476818b4fe07d70cf064c52a8",
+      "tests/cost-blueprint.test.ts": "6c6dd78e448fdc87b53850685f561328d802d1fc237cfa2a8c52f0e2e0d5ee86"
+    },
+    "runners": {
+      "tests/goals.test.ts": "npx vitest run {file}",
+      "tests/cost-blueprint.test.ts": "npx vitest run {file}"
+    }
+  },
+  "cost-calc": {
+    "lockedAt": "2026-10-27T03:16:28.233Z",
+    "by": "ai",
+    "files": {
+      ".pm/acceptance/cost-calc.feature": "91388c12578f862d8d5502c69ee0a314d44d06eaefb7444fcf5ddda2f253a52f",
+      "tests/cost-blueprint.test.ts": "6c6dd78e448fdc87b53850685f561328d802d1fc237cfa2a8c52f0e2e0d5ee86",
+      "tests/commands/tokens-hooks.test.ts": "190194d29e5a7dd2ec3004d0da12617d55aad90983be31ebef41114e9d404ff3",
+      "tests/transcript-formats.test.ts": "65d38d561d0bc600764c46557fd75672a1d2e9c042687b031b516776630cb9da"
+    },
+    "runners": {
+      "tests/cost-blueprint.test.ts": "npx vitest run {file}",
+      "tests/commands/tokens-hooks.test.ts": "npx vitest run {file}",
+      "tests/transcript-formats.test.ts": "npx vitest run {file}"
+    }
+  },
+  "verify-runner": {
+    "lockedAt": "2026-10-27T03:16:28.233Z",
+    "by": "ai",
+    "files": {
+      ".pm/acceptance/verify-runner.feature": "99155270752acd3ce276950ae65ade4987a710f4dae13a41f07e9872cb6c76de",
+      "tests/commands/verify.test.ts": "5a73ab66fa790ef10984d1226e7efc9c910692df72ea5fa8c39dfcd4bb0cae6a",
+      "tests/commands/hardening.test.ts": "ec6adc85214243555355c4961b69aaab8bbf16501d40c654d964abc0e98eb9f9"
+    },
+    "runners": {
+      "tests/commands/verify.test.ts": "npx vitest run {file}",
+      "tests/commands/hardening.test.ts": "npx vitest run {file}"
+    }
+  },
+  "locks": {
+    "lockedAt": "2026-10-27T03:16:28.233Z",
+    "by": "ai",
+    "files": {
+      ".pm/acceptance/locks.feature": "e183531fd012b26e08c8241b7929dbab8af1f0e3b6dc784af8cf3b63efee9591",
+      "tests/commands/workflow.test.ts": "9b3605b2501c872e31ba122d334d67f85ef2567a91b05f909f4eed961d3b2f52",
+      "tests/commands/hardening.test.ts": "ec6adc85214243555355c4961b69aaab8bbf16501d40c654d964abc0e98eb9f9"
+    },
+    "runners": {
+      "tests/commands/workflow.test.ts": "npx vitest run {file}",
+      "tests/commands/hardening.test.ts": "npx vitest run {file}"
+    }
+  },
+  "dash-render": {
+    "lockedAt": "2026-10-27T03:16:28.233Z",
+    "by": "ai",
+    "files": {
+      ".pm/acceptance/dash-render.feature": "5cb6198a56b80649f16b55cadae12ba67cebc1633f82b454f2342e2cb089f4b6",
+      "tests/dashboard-render.test.ts": "fb8f22aeb87e93d785d231ef453a2ab42dd7f21b9c7457cf2445938606733cad",
+      "tests/cost-blueprint.test.ts": "6c6dd78e448fdc87b53850685f561328d802d1fc237cfa2a8c52f0e2e0d5ee86"
+    },
+    "runners": {
+      "tests/dashboard-render.test.ts": "npx vitest run {file}",
+      "tests/cost-blueprint.test.ts": "npx vitest run {file}"
+    }
+  },
+  "dash-client": {
+    "lockedAt": "2026-10-27T03:16:28.233Z",
+    "by": "ai",
+    "files": {
+      ".pm/acceptance/dash-client.feature": "4efe1f5861f0a2befa9de2c5f5d4b7c68b32a4d716ff4b273f64a8ec3fe9cabb",
+      "tests/dashboard-dom.test.ts": "e857fd8e5187815a60da0763dbbead7f7f9b5131cc30e2636309f4837f73e74a"
+    },
+    "runners": {
+      "tests/dashboard-dom.test.ts": "npx vitest run {file}"
+    }
+  },
+  "context-gen": {
+    "lockedAt": "2026-10-27T03:16:28.233Z",
+    "by": "ai",
+    "files": {
+      ".pm/acceptance/context-gen.feature": "16e95d6262dc82cdeb8e37647d0115dd29dd3ca3850c53a9f016b6874d975905",
+      "tests/commands/tokens-hooks.test.ts": "190194d29e5a7dd2ec3004d0da12617d55aad90983be31ebef41114e9d404ff3",
+      "tests/commands/hardening.test.ts": "ec6adc85214243555355c4961b69aaab8bbf16501d40c654d964abc0e98eb9f9"
+    },
+    "runners": {
+      "tests/commands/tokens-hooks.test.ts": "npx vitest run {file}",
+      "tests/commands/hardening.test.ts": "npx vitest run {file}"
+    }
+  },
+  "hook-adapter": {
+    "lockedAt": "2026-10-27T03:16:28.233Z",
+    "by": "ai",
+    "files": {
+      ".pm/acceptance/hook-adapter.feature": "8d5aa8b4efa7e58179136ee9168db7df588e97886f14817c7a52c184cc463646",
+      "tests/commands/tokens-hooks.test.ts": "190194d29e5a7dd2ec3004d0da12617d55aad90983be31ebef41114e9d404ff3",
+      "tests/commands/hardening.test.ts": "ec6adc85214243555355c4961b69aaab8bbf16501d40c654d964abc0e98eb9f9",
+      "tests/commands/setup.test.ts": "57a72b883021d457b34e089dfaeab93208c3f6b76f3d1e1c71518c0c3f9b3cb3"
+    },
+    "runners": {
+      "tests/commands/tokens-hooks.test.ts": "npx vitest run {file}",
+      "tests/commands/hardening.test.ts": "npx vitest run {file}",
+      "tests/commands/setup.test.ts": "npx vitest run {file}"
+    }
+  },
+  "setup-gen": {
+    "lockedAt": "2026-10-27T03:16:28.233Z",
+    "by": "ai",
+    "files": {
+      ".pm/acceptance/setup-gen.feature": "87d97a0e0fc848e5db623bf62fd3a0ea23a7903d7f1aac4f8f68580ad91de5eb",
+      "tests/commands/setup.test.ts": "57a72b883021d457b34e089dfaeab93208c3f6b76f3d1e1c71518c0c3f9b3cb3"
+    },
+    "runners": {
+      "tests/commands/setup.test.ts": "npx vitest run {file}"
+    }
+  },
+  "skill": {
+    "lockedAt": "2026-10-27T03:16:28.233Z",
+    "by": "ai",
+    "files": {
+      ".pm/acceptance/skill.feature": "6fac2570d6c706aea7100ce051282bccd7596da59244502a39fb7a09ede3c007",
+      "ops/health/skill.sh": "211b1283c0092dae605007f06600cb41b2c0ca8174a5ea85c80d92cc9c1c503d"
+    },
+    "runners": {
+      "ops/health/skill.sh": "bash {file}"
+    }
+  },
+  "cloud-client": {
+    "lockedAt": "2026-10-27T03:16:28.233Z",
+    "by": "ai",
+    "files": {
+      ".pm/acceptance/cloud-client.feature": "d0bef2734521f0c473b46eb1496f0bd9cfe76dfcca945c6da9359890a00d7313",
+      "tests/cloud/cli.test.ts": "f6eef6636f2d3dca06e2d75854c4d5ff9b3fa71fd977d83e54b7352b17ae18ab",
+      "tests/cloud/snapshot.test.ts": "7db0d5a0eceaa4206f12a66395a097ccf1c07048482c555ece9bf2ed96d63c69"
+    },
+    "runners": {
+      "tests/cloud/cli.test.ts": "npx vitest run {file}",
+      "tests/cloud/snapshot.test.ts": "npx vitest run {file}"
+    }
+  },
+  "api": {
+    "lockedAt": "2026-10-27T03:16:28.233Z",
+    "by": "ai",
+    "files": {
+      ".pm/acceptance/api.feature": "749d382118b841673e0b8707496d114a054a2a8fee508044c1040d86f5c1a44c",
+      "tests/cloud/server.test.ts": "2465eb4b952a00f4a8e888f2aeb793d6866901448e3232111f468e4525b4d22c",
+      "tests/cloud/units.test.ts": "efe864b241ada34a19379d375032b1bcb0514096de1548a266e0b0e5cd0296fe"
+    },
+    "runners": {
+      "tests/cloud/server.test.ts": "npx vitest run {file}",
+      "tests/cloud/units.test.ts": "npx vitest run {file}"
+    }
+  },
+  "web-pages": {
+    "lockedAt": "2026-10-27T03:16:28.233Z",
+    "by": "ai",
+    "files": {
+      ".pm/acceptance/web-pages.feature": "9fbcec12026bc1ef08d199dec14ca7167444149e485a9856f8df0e21b98ee2cc",
+      "tests/cloud/server.test.ts": "2465eb4b952a00f4a8e888f2aeb793d6866901448e3232111f468e4525b4d22c"
+    },
+    "runners": {
+      "tests/cloud/server.test.ts": "npx vitest run {file}"
+    }
+  },
+  "cloud-db": {
+    "lockedAt": "2026-10-27T03:16:28.233Z",
+    "by": "ai",
+    "files": {
+      ".pm/acceptance/cloud-db.feature": "c64f05fc788780b9e0725631c4e2e53a2d638b0a44fa3496abd0dabaa3df547c",
+      "tests/cloud/server.test.ts": "2465eb4b952a00f4a8e888f2aeb793d6866901448e3232111f468e4525b4d22c"
+    },
+    "runners": {
+      "tests/cloud/server.test.ts": "npx vitest run {file}"
+    }
+  },
+  "credentials": {
+    "lockedAt": "2026-10-27T03:16:28.233Z",
+    "by": "ai",
+    "files": {
+      ".pm/acceptance/credentials.feature": "fea72b2d4af98c2595b0bbff4d893a0a6fc58b29762bb0f0c07ec54397c61f7f",
+      "tests/cloud/cli.test.ts": "f6eef6636f2d3dca06e2d75854c4d5ff9b3fa71fd977d83e54b7352b17ae18ab"
+    },
+    "runners": {
+      "tests/cloud/cli.test.ts": "npx vitest run {file}"
+    }
+  },
+  "agent-platform": {
+    "lockedAt": "2026-10-27T03:16:28.233Z",
+    "by": "ai",
+    "files": {
+      ".pm/acceptance/agent-platform.feature": "765cbe50cc0050f1aff102e1f2990dae899f2c9f9ba20600d33f578fb28ff24b",
+      "ops/health/agent-platform.sh": "b51e936140023063941e8f85356ba7fddde04a32413d4a2006cc1da6bda6f621"
+    },
+    "runners": {
+      "ops/health/agent-platform.sh": "bash {file}"
+    }
+  },
+  "test-tools": {
+    "lockedAt": "2026-10-27T03:16:28.233Z",
+    "by": "ai",
+    "files": {
+      ".pm/acceptance/test-tools.feature": "9a040cfcbce4b1e62079b2e144363bbcf1727057f48bba41da1c72ce36515fce",
+      "ops/health/test-tools.sh": "7a1b2fc59af7374e320b72015d635bd70a53c7488fc868f5e26fcfecb4521efa"
+    },
+    "runners": {
+      "ops/health/test-tools.sh": "bash {file}"
+    }
+  },
+  "p-marketplace": {
+    "lockedAt": "2026-10-27T03:16:28.233Z",
+    "by": "ai",
+    "files": {
+      ".pm/acceptance/p-marketplace.feature": "22c13924380199579b669ff48cd836f2a8ec64502974687258d389cb16582cc6",
+      "ops/health/p-marketplace.sh": "1c9f96a12119e7a4fb01d0ffdcd54326dff2a5f5add76c9cd6bc84992fa51454"
+    },
+    "runners": {
+      "ops/health/p-marketplace.sh": "bash {file}"
+    }
+  },
+  "p-home": {
+    "lockedAt": "2026-10-27T03:16:28.233Z",
+    "by": "ai",
+    "files": {
+      ".pm/acceptance/p-home.feature": "9227dd94fea379be0b4f6471eecfaad0f7e941bf86923484052153669ef0a463",
+      "ops/health/p-home.sh": "6f4b5a7f82fd75cddf9516fe5aaf093e6a73990eb71aab26e784ab644a191194"
+    },
+    "runners": {
+      "ops/health/p-home.sh": "bash {file}"
+    }
+  },
+  "p-server": {
+    "lockedAt": "2026-10-27T03:16:28.233Z",
+    "by": "ai",
+    "files": {
+      ".pm/acceptance/p-server.feature": "27d45a16d9fd9f23f3d321c182daa0142cfcd711588c534a93b095e37c3c0747",
+      "ops/health/p-server.sh": "9cd31e7bd0c96cf6364c3a418ed07fabfb2fbc1428ff56c132a1b69be8bf52cc"
+    },
+    "runners": {
+      "ops/health/p-server.sh": "bash {file}"
+    }
+  },
+  "p-sqlite": {
+    "lockedAt": "2026-10-27T03:16:28.233Z",
+    "by": "ai",
+    "files": {
+      ".pm/acceptance/p-sqlite.feature": "8d7545f8e0983faca082e677afbd4cddd94e8e16904f63f90159b9b8d4d46f33",
+      "ops/health/p-sqlite.sh": "6ee4f43294cb1f0ab4801b57fe12c1a6f96fdc748af29c103d83ea6867254d37"
+    },
+    "runners": {
+      "ops/health/p-sqlite.sh": "bash {file}"
+    }
+  }
+}

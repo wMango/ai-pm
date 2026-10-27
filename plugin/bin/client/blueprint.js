@@ -1,5 +1,7 @@
 // ---------- ⑤ 旅程蓝图：服务蓝图泳道 + 可用性曲线 + 故事地图切线 ----------
 const BP = { LABEL_W: 120, COL_W: 230, CHIP_W: 150, CHIP_H: 26, CHIP_GAP: 6, LANE_PAD: 18, CURVE_TOP: 20, CURVE_H: 60, USER_H: 70 };
+/** 每格泳道最多露出几个模块，多出来的收成"+N" */
+const LANE_MAX = 4;
 const BP_LANES = [["front", "前台"], ["back", "后台"], ["support", "支撑系统"]];
 const BP_LINES = ["交互线", "可见线 · 用户看不到以下", "内部交互线"];
 const STEP_STYLE = {
@@ -14,7 +16,7 @@ const laneGeometry = (bp) => {
   const user = { top: y, bottom: y + BP.USER_H };
   y = user.bottom + 12;
   const lanes = BP_LANES.map(([key, label]) => {
-    const count = Math.max(1, ...bp.steps.map((s) => s.lanes[key].length));
+    const count = Math.max(1, ...bp.steps.map((s) => Math.min(LANE_MAX, s.lanes[key].length)));
     const height = count * (BP.CHIP_H + BP.CHIP_GAP) + BP.LANE_PAD * 2;
     const lane = { key, label, top: y, bottom: y + height };
     y = lane.bottom + 12;
@@ -37,16 +39,36 @@ const drawLaneFrame = (root, geo, width) => {
   });
 };
 
+/** 一格放不下时：根因排最前，其次是有问题的模块，其余收起 */
+const laneSlots = (ctx, ids, rootId) => {
+  if (ids.length <= LANE_MAX) return { shown: ids, hidden: [] };
+  const rank = (id) => (id === rootId ? -1 : STATE_RANK[ctx.node(id).state]);
+  const ranked = [...ids].sort((a, b) => rank(a) - rank(b));
+  return { shown: ranked.slice(0, LANE_MAX - 1), hidden: ranked.slice(LANE_MAX - 1) };
+};
+
+const drawOverflow = (ctx, group, hidden, cx, y) => {
+  const names = hidden.map((id) => ctx.node(id).name).join("、");
+  group.appendChild(svg("g", { "aria-label": `另有 ${hidden.length} 个模块：${names}`, role: "img", transform: `translate(${cx - BP.CHIP_W / 2},${y - BP.CHIP_H / 2})` }, [
+    svg("title", {}, [names]),
+    svg("rect", { width: BP.CHIP_W, height: BP.CHIP_H, rx: 7, fill: "var(--card)", stroke: "var(--ink-3)", "stroke-dasharray": "4 4" }),
+    txt(BP.CHIP_W / 2, 17, `+${hidden.length} 个模块`, { "text-anchor": "middle", fill: "var(--ink-2)" }),
+  ]));
+};
+
 const drawStep = (ctx, root, step, i, geo) => {
   const cx = BP.LABEL_W + BP.COL_W * (i + 0.5);
   const style = STEP_STYLE[step.status];
   const group = svg("g", { class: "bp-step", "data-step": step.step, opacity: step.slice === "later" ? 0.5 : 1 });
   const positions = new Map();
   geo.lanes.forEach((lane) => {
-    const ids = step.lanes[lane.key];
+    const { shown, hidden } = laneSlots(ctx, step.lanes[lane.key], step.root);
+    const slots = shown.length + (hidden.length ? 1 : 0);
     const center = (lane.top + lane.bottom) / 2;
-    const total = ids.length * BP.CHIP_H + Math.max(0, ids.length - 1) * BP.CHIP_GAP;
-    ids.forEach((id, j) => positions.set(id, center - total / 2 + BP.CHIP_H / 2 + j * (BP.CHIP_H + BP.CHIP_GAP)));
+    const total = slots * BP.CHIP_H + Math.max(0, slots - 1) * BP.CHIP_GAP;
+    const slotY = (j) => center - total / 2 + BP.CHIP_H / 2 + j * (BP.CHIP_H + BP.CHIP_GAP);
+    shown.forEach((id, j) => positions.set(id, slotY(j)));
+    if (hidden.length) drawOverflow(ctx, group, hidden, cx, slotY(shown.length));
     if (step.status === "gap") {
       group.appendChild(svg("rect", { x: cx - BP.CHIP_W / 2, y: center - BP.CHIP_H / 2, width: BP.CHIP_W, height: BP.CHIP_H, rx: 7, fill: "none", stroke: "var(--blocked)", "stroke-dasharray": "4 4" }));
       group.appendChild(txt(cx, center + 4, "?", { "text-anchor": "middle", "font-weight": 900, fill: "var(--blocked)" }));
@@ -98,7 +120,7 @@ const renderBlueprints = (ctx) => {
     const goal = ctx.data.goals.find((g) => g.id === bp.goal);
     const geo = laneGeometry(bp);
     const width = BP.LABEL_W + bp.steps.length * BP.COL_W + 10;
-    const chart = svg("svg", { class: "bp", viewBox: `0 0 ${width} ${geo.height}`, role: "img", "aria-label": `${bp.goal} 旅程蓝图`, style: `min-width:${Math.min(width, 860)}px` });
+    const chart = svg("svg", { class: "bp", viewBox: `0 0 ${width} ${geo.height}`, role: "img", "aria-label": `${bp.goal} 旅程蓝图`, style: `min-width:${width}px` });
     drawLaneFrame(chart, geo, width);
     const points = bp.steps.map((s, i) => drawStep(ctx, chart, s, i, geo));
     drawCurve(chart, points);

@@ -1,0 +1,112 @@
+# 由 pm init 生成（ai-pm 插件），架构由 AI 按仓库现状起草、待人确认
+# 三套架构各自独立；状态只由验收测试决定；每个视图不超过 40 个节点
+version: 1
+project: "AI 项目管理（ai-pm）"
+settings:
+  runners:                      # 按文件后缀选择运行命令，{file} 会被替换成加了引号的路径
+    ".sh": "bash {file}"
+    ".test.ts": "npx vitest run {file}"
+
+views:
+  # ── 功能视图：用户可感知的能力 ──
+  functional:
+    # 本地看清项目全貌
+    - { id: f-describe, name: 用 pm.yaml 描述三套架构并得到校验提示, spec: .pm/acceptance/f-describe.feature, acceptance: [tests/load.test.ts, tests/cli.test.ts] }
+    - { id: f-verify, name: 运行验收测试得出模块状态, spec: .pm/acceptance/f-verify.feature, acceptance: [tests/commands/verify.test.ts, tests/effective.test.ts], depends: [{ on: f-describe }] }
+    - { id: f-map, name: 打开离线项目地图（五视图）, spec: .pm/acceptance/f-map.feature, acceptance: [tests/cli.test.ts, tests/dashboard-render.test.ts, tests/dashboard-dom.test.ts], depends: [{ on: f-describe }] }
+    - { id: f-next, name: 看到目标缺口与按杠杆排序的下一步, spec: .pm/acceptance/f-next.feature, acceptance: [tests/acceptance/f-next.test.ts], depends: [{ on: f-verify }] }
+    - { id: f-cost, name: 看到各模块的 token 成本, spec: .pm/acceptance/f-cost.feature, acceptance: [tests/cost-blueprint.test.ts, tests/commands/tokens-hooks.test.ts, tests/transcript-formats.test.ts], depends: [{ on: f-describe }] }
+    - { id: f-lock, name: 人确认并锁定验收条目，改动后提示待复核, spec: .pm/acceptance/f-lock.feature, acceptance: [tests/commands/workflow.test.ts, tests/commands/hardening.test.ts], depends: [{ on: f-describe }] }
+    # AI 代理里自动管项目
+    - { id: f-install, name: 在 Claude Code / Codex 安装插件, spec: .pm/acceptance/f-install.feature, acceptance: [ops/health/p-marketplace.sh, tests/commands/tokens-hooks.test.ts] }
+    - { id: f-setup, name: 接入 OpenCode / DeepSeek Harness, spec: .pm/acceptance/f-setup.feature, acceptance: [tests/commands/setup.test.ts] }
+    - { id: f-guide, name: Skill 引导 AI 起草架构与验收条目, spec: .pm/acceptance/f-guide.feature, acceptance: [ops/health/skill.sh], depends: [{ on: f-describe }] }
+    - { id: f-inject, name: 会话开始自动注入项目上下文, spec: .pm/acceptance/f-inject.feature, acceptance: [tests/commands/tokens-hooks.test.ts, tests/commands/hardening.test.ts], depends: [{ on: f-next }] }
+    - { id: f-autorun, name: 会话结束自动记 token、跑验收、刷新地图, spec: .pm/acceptance/f-autorun.feature, acceptance: [tests/commands/tokens-hooks.test.ts, tests/commands/hardening.test.ts], depends: [{ on: f-verify }, { on: f-cost }, { on: f-map }] }
+    # 规划中（slice: later）
+    - { id: f-live-panel, name: Claude Code 内常驻面板实时刷新（P3）, depends: [{ on: f-map }] }
+    - { id: f-history, name: 按提交回看项目演进（历史目录页）, depends: [{ on: f-map }] }
+
+  # ── 逻辑视图：分层组件 ──
+  logical:
+    # front
+    - { id: cli, name: pm 命令行（src/cli.ts + commands）, layer: front, spec: .pm/acceptance/cli.feature, acceptance: [tests/cli.test.ts], depends: [{ on: loader }] }
+    - { id: dash-client, name: 地图前端（dashboard/client）, layer: front, spec: .pm/acceptance/dash-client.feature, acceptance: [tests/dashboard-dom.test.ts] }
+    - { id: skill, name: pm Skill（plugin/skills/pm）, layer: front, spec: .pm/acceptance/skill.feature, acceptance: [ops/health/skill.sh], depends: [{ on: cli }] }
+    - { id: hook-adapter, name: 钩子适配（hook.ts + hooks.json + opencode 插件）, layer: front, spec: .pm/acceptance/hook-adapter.feature, acceptance: [tests/commands/tokens-hooks.test.ts, tests/commands/hardening.test.ts, tests/commands/setup.test.ts], depends: [{ on: cli }] }
+    # service
+    - { id: loader, name: 加载与校验（load + schema）, layer: service, spec: .pm/acceptance/loader.feature, acceptance: [tests/acceptance/loader.test.ts], depends: [{ on: pmdir }] }
+    - { id: engine, name: 状态与生效计算（graph + evaluate + analyze）, layer: service, spec: .pm/acceptance/engine.feature, acceptance: [tests/effective.test.ts], depends: [{ on: loader }] }
+    - { id: goals-calc, name: 目标缺口与杠杆（goals + blueprint）, layer: service, spec: .pm/acceptance/goals-calc.feature, acceptance: [tests/goals.test.ts, tests/cost-blueprint.test.ts], depends: [{ on: engine }] }
+    - { id: cost-calc, name: token 记账（cost + transcript + record）, layer: service, spec: .pm/acceptance/cost-calc.feature, acceptance: [tests/cost-blueprint.test.ts, tests/commands/tokens-hooks.test.ts, tests/transcript-formats.test.ts], depends: [{ on: pmdir }, { on: agent-platform }] }
+    - { id: verify-runner, name: 验收运行器（workflow/runner + verify）, layer: service, spec: .pm/acceptance/verify-runner.feature, acceptance: [tests/commands/verify.test.ts, tests/commands/hardening.test.ts], depends: [{ on: loader }, { on: locks }, { on: test-tools }] }
+    - { id: locks, name: 锁定与待复核（workflow/locks）, layer: service, spec: .pm/acceptance/locks.feature, acceptance: [tests/commands/workflow.test.ts, tests/commands/hardening.test.ts], depends: [{ on: pmdir }] }
+    - { id: dash-render, name: 地图渲染（dashboard/render）, layer: service, spec: .pm/acceptance/dash-render.feature, acceptance: [tests/dashboard-render.test.ts, tests/cost-blueprint.test.ts], depends: [{ on: goals-calc }, { on: cost-calc }, { on: dash-client }] }
+    - { id: context-gen, name: AI 上下文摘要（report / pm context）, layer: service, spec: .pm/acceptance/context-gen.feature, acceptance: [tests/commands/tokens-hooks.test.ts, tests/commands/hardening.test.ts], depends: [{ on: goals-calc }] }
+    - { id: setup-gen, name: 平台接入生成（commands/setup）, layer: service, spec: .pm/acceptance/setup-gen.feature, acceptance: [tests/commands/setup.test.ts] }
+    - { id: live-panel, name: 常驻面板（P3，未建）, layer: front, depends: [{ on: dash-render }] }
+    # data
+    - { id: pmdir, name: .pm 目录（pm.yaml / evidence / ledger / locks）, layer: data, spec: .pm/acceptance/pmdir.feature, acceptance: [tests/acceptance/pmdir.test.ts] }
+    # external
+    - { id: agent-platform, name: 代理平台（Claude Code / Codex / OpenCode）, layer: external, spec: .pm/acceptance/agent-platform.feature, acceptance: [ops/health/agent-platform.sh] }
+    - { id: test-tools, name: 项目测试工具（vitest / playwright / bash）, layer: external, spec: .pm/acceptance/test-tools.feature, acceptance: [ops/health/test-tools.sh] }
+
+  # ── 物理视图：部署、存储、外部服务 ──
+  physical:
+    - { id: p-node, name: 本机 Node.js 运行时, spec: .pm/acceptance/p-node.feature, acceptance: [ops/health/p-node.sh] }
+    - { id: p-bundle, name: 插件构建产物（plugin/bin/pm.mjs）, spec: .pm/acceptance/p-bundle.feature, acceptance: [ops/health/p-bundle.sh], depends: [{ on: p-node }] }
+    - { id: p-marketplace, name: 本地插件市场（.claude-plugin）, spec: .pm/acceptance/p-marketplace.feature, acceptance: [ops/health/p-marketplace.sh], depends: [{ on: p-bundle }] }
+    - { id: p-repo, name: 用户项目仓库（.pm/）, spec: .pm/acceptance/p-repo.feature, acceptance: [ops/health/p-repo.sh] }
+
+mappings:
+  # 功能 → 逻辑
+  - { from: f-describe, to: [cli, loader], kind: realized_by }
+  - { from: f-verify, to: [cli, verify-runner, engine], kind: realized_by }
+  - { from: f-map, to: [cli, dash-render], kind: realized_by }
+  - { from: f-next, to: [goals-calc, context-gen], kind: realized_by }
+  - { from: f-cost, to: [cost-calc, dash-render], kind: realized_by }
+  - { from: f-lock, to: [cli, locks], kind: realized_by }
+  - { from: f-install, to: [skill, hook-adapter], kind: realized_by }
+  - { from: f-setup, to: [cli, setup-gen], kind: realized_by }
+  - { from: f-guide, to: skill, kind: realized_by }
+  - { from: f-inject, to: [hook-adapter, context-gen], kind: realized_by }
+  - { from: f-autorun, to: [hook-adapter, cost-calc, verify-runner, dash-render], kind: realized_by }
+  - { from: f-live-panel, to: live-panel, kind: realized_by }
+  # 逻辑 → 物理
+  - { from: cli, to: p-bundle, kind: deployed_on }
+  - { from: dash-client, to: p-bundle, kind: deployed_on }
+  - { from: skill, to: p-marketplace, kind: deployed_on }
+  - { from: hook-adapter, to: p-marketplace, kind: deployed_on }
+  - { from: loader, to: p-bundle, kind: deployed_on }
+  - { from: engine, to: p-bundle, kind: deployed_on }
+  - { from: goals-calc, to: p-bundle, kind: deployed_on }
+  - { from: cost-calc, to: p-bundle, kind: deployed_on }
+  - { from: verify-runner, to: p-bundle, kind: deployed_on }
+  - { from: locks, to: p-bundle, kind: deployed_on }
+  - { from: dash-render, to: p-bundle, kind: deployed_on }
+  - { from: context-gen, to: p-bundle, kind: deployed_on }
+  - { from: setup-gen, to: p-bundle, kind: deployed_on }
+  - { from: pmdir, to: p-repo, kind: deployed_on }
+
+goals:
+  - id: G1
+    name: 用户能在本地一眼看清项目全貌：模块状态、目标缺口和下一步
+    requires: [f-describe, f-verify, f-map, f-next]
+    journey:
+      - { step: 描述架构, functional: f-describe }
+      - { step: 锁定验收, functional: f-lock }
+      - { step: 跑验收得状态, functional: f-verify }
+      - { step: 打开地图, functional: f-map }
+      - { step: 看成本, functional: f-cost }
+      - { step: 看下一步, functional: f-next }
+      - { step: 按提交回看演进, functional: f-history, slice: later }
+  - id: G2
+    name: 用户能在 AI 代理里装上插件，由它自动管理项目
+    requires: [f-install, f-guide, f-inject, f-autorun]
+    journey:
+      - { step: 安装插件, functional: f-install }
+      - { step: 接入其他平台, functional: f-setup }
+      - { step: AI 起草架构与条目, functional: f-guide }
+      - { step: 会话开始注入上下文, functional: f-inject }
+      - { step: 会话结束自动验收, functional: f-autorun }
+      - { step: 常驻面板实时看, functional: f-live-panel, slice: later }

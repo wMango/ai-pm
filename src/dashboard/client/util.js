@@ -14,6 +14,8 @@ const append = (node, children) => {
     .forEach((c) => node.appendChild(typeof c === "string" || typeof c === "number" ? document.createTextNode(String(c)) : c));
   return node;
 };
+/** 清空后再放入子节点；和 append 一样跳过 null，避免 replaceChildren 把 null 显示成文字 */
+const fill = (node, children) => { node.replaceChildren(); return append(node, children); };
 const svg = (tag, attrs = {}, children = []) => {
   const node = document.createElementNS(SVG_NS, tag);
   Object.entries(attrs).forEach(([k, v]) => { if (v !== undefined && v !== null) node.setAttribute(k, String(v)); });
