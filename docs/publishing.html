@@ -156,16 +156,16 @@ svg .mono { font-family: var(--font-mono); }
 <section aria-labelledby="s3">
   <div class="sec-head">
     <span class="sec-num">03</span><h2 id="s3">发布前清单</h2>
-    <p class="sub">绿点已完成，红圈还没做，橙圈视情况而定。现在用户两条命令就能装上。</p>
+    <p class="sub">绿点已完成，橙圈还剩一部分或视情况而定。现在用户两条命令就能装上。</p>
   </div>
   <div class="card pad checklist">
     <svg viewBox="0 0 200 200" role="img" aria-label="10 项里 8 项已完成" style="width:200px;height:200px;justify-self:center">
       <circle cx="100" cy="100" r="78" fill="none" stroke="var(--paper-2)" stroke-width="18"/>
       <circle cx="100" cy="100" r="78" fill="none" stroke="var(--ok)" stroke-width="18" stroke-dasharray="392 490" transform="rotate(-90 100 100)" opacity=".85"/>
-      <circle cx="100" cy="100" r="78" fill="none" stroke="var(--break)" stroke-width="18" stroke-dasharray="49 490" stroke-dashoffset="-392" transform="rotate(-90 100 100)" opacity=".85"/>
+      <circle cx="100" cy="100" r="78" fill="none" stroke="var(--blocked)" stroke-width="18" stroke-dasharray="49 490" stroke-dashoffset="-392" transform="rotate(-90 100 100)" opacity=".85"/>
       <circle cx="100" cy="100" r="78" fill="none" stroke="var(--blocked)" stroke-width="18" stroke-dasharray="49 490" stroke-dashoffset="-441" transform="rotate(-90 100 100)" opacity=".85"/>
       <text x="100" y="96" text-anchor="middle" font-size="40" font-weight="900" class="mono" fill="var(--ink)">8/10</text>
-      <text x="100" y="124" text-anchor="middle" font-size="13" fill="var(--ink-2)">剩 1 必做 · 1 视情况</text>
+      <text x="100" y="124" text-anchor="middle" font-size="13" fill="var(--ink-2)">剩 2 项待做</text>
     </svg>
     <div>
       <ul class="checks">
@@ -176,7 +176,7 @@ svg .mono { font-family: var(--font-mono); }
         <li class="done"><i class="dot"></i><span>每次发布递增 plugin.json 的 version，marketplace 条目里不写</span><small>当前 0.3.0</small></li>
         <li class="done"><i class="dot"></i><span>运行 claude plugin validate ./plugin --strict</span><small>已通过</small></li>
         <li class="done"><i class="dot"></i><span>合并进 main，打标签，写 Release 说明</span><small>v0.3.0</small></li>
-        <li class="todo"><i class="dot"></i><span>换一台机器从零安装、初始化、开工走一遍</span><small>真实验证</small></li>
+        <li class="warn"><i class="dot"></i><span>换一台机器从零安装、初始化、开工走一遍</span><small>安装已验证，AI 开工流程待走</small></li>
         <li class="done"><i class="dot"></i><span>决定本仓库自己的 .pm/ 是否随仓库公开</span><small>公开，作为示例</small></li>
         <li class="warn"><i class="dot"></i><span>（只为上架目录）把 plugin/bin/ 挪出顶层 bin/</span><small>同步钩子与技能路径</small></li>
       </ul>
