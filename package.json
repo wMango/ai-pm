@@ -1,6 +1,6 @@
 {
   "name": "ai-pm-engine",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "AI 时代图形化项目管理：pm.yaml 计算引擎",
   "directories": {
     "doc": "docs"

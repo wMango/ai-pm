@@ -5,3 +5,4 @@ trusted-runners
 *.tmp
 history/
 dashboard-data.js
+.verify.lock

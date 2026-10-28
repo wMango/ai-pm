@@ -1,6 +1,6 @@
 {
   "name": "ai-pm",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "AI 编码时代的图形化项目管理：用架构图看清进度，按验收测试判断生效，从目标倒推下一步",
   "author": {
     "name": "wMango",

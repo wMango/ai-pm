@@ -2,6 +2,8 @@
 import { spawn } from "node:child_process";
 import { appendFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { createRequire } from "node:module";
 import { z } from "zod";
 import { EXIT, UsageError, findPmPaths, isRunnersTrusted, loadModel, parseArgs, writeJson } from "./shared.js";
 import type { Command, CliIo, PmPaths } from "./shared.js";
@@ -74,20 +76,25 @@ const sessionEndWork = (paths: PmPaths, payload: Payload): void => {
 
 /** SessionEnd 钩子只有约 1.5 秒：把工作交给脱离的后台进程，载荷经管道传入，立即返回 */
 const spawnSessionEnd = (paths: PmPaths, payload: Payload, io: CliIo): void => {
-  const entry = process.argv[1];
-  if (!entry) throw new Error("无法定位 pm 入口脚本，后台任务未启动");
-  const child = spawn(process.execPath, [...process.execArgv, resolve(entry), "hook", "session-end", "--sync"], {
+  // argv[1] 可能属于 Vitest 或其他调用者，绝不能把调用者重新启动一遍。
+  const modulePath = fileURLToPath(import.meta.url);
+  const bundled = modulePath.endsWith(".mjs");
+  const entry = bundled ? modulePath : fileURLToPath(new URL("../cli.ts", import.meta.url));
+  const runtime = bundled ? [] : ["--import", createRequire(import.meta.url).resolve("tsx/esm")];
+  const child = spawn(process.execPath, [...runtime, entry, "hook", "session-end", "--sync"], {
     cwd: paths.root,
     detached: true,
     stdio: ["pipe", "ignore", "ignore"],
   });
   child.on("error", (error) => io.err(`pm hook session-end：后台任务启动失败：${error.message}\n`));
+  child.stdin?.on("error", (error) => io.err(`pm hook session-end：后台任务输入失败：${error.message}\n`));
   child.stdin?.end(JSON.stringify({ ...payload, cwd: paths.root }));
   child.unref();
 };
 
-/** 优先使用 Claude Code 提供的项目目录，其次从 cwd 向上查找 .pm/ */
+/** 事件自己的 cwd 优先，避免继承的宿主目录把子项目/临时测试导回真实项目。 */
 const locate = (payload: Payload, io: CliIo): PmPaths | null => {
+  if (payload.cwd) return findPmPaths(payload.cwd);
   const fromEnv = process.env.CLAUDE_PROJECT_DIR;
   return (fromEnv ? findPmPaths(fromEnv) : null) ?? findPmPaths(payload.cwd ?? io.cwd);
 };
@@ -95,6 +102,8 @@ const locate = (payload: Payload, io: CliIo): PmPaths | null => {
 const handle = (event: HookEvent, payload: Payload, sync: boolean, io: CliIo): void => {
   const paths = locate(payload, io);
   if (!paths) return;
+  // 验收程序不能重新触发本项目的钩子，否则会发生测试 → 钩子 → 测试的递归。
+  if (process.env.AI_PM_VERIFY_ROOT === paths.root) return;
   if (event === "session-start") {
     // 告诉 AI 这个插件的 pm 命令在哪，Skill 里的步骤直接用它
     const entry = process.argv[1];

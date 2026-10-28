@@ -49,9 +49,29 @@
     "total": 2,
     "pendingReview": true
   },
+  "f-history": {
+    "passed": 2,
+    "total": 2,
+    "pendingReview": true
+  },
   "f-autorun": {
     "passed": 2,
     "total": 2,
+    "pendingReview": true
+  },
+  "f-statusline": {
+    "passed": 1,
+    "total": 1,
+    "pendingReview": true
+  },
+  "f-open": {
+    "passed": 1,
+    "total": 1,
+    "pendingReview": true
+  },
+  "f-live-map": {
+    "passed": 3,
+    "total": 3,
     "pendingReview": true
   },
   "cli": {
@@ -62,7 +82,7 @@
   "dash-client": {
     "passed": 1,
     "total": 1,
-    "pendingReview": true
+    "pendingReview": false
   },
   "skill": {
     "passed": 1,
@@ -114,10 +134,30 @@
     "total": 2,
     "pendingReview": false
   },
+  "history-gen": {
+    "passed": 2,
+    "total": 2,
+    "pendingReview": false
+  },
   "setup-gen": {
     "passed": 1,
     "total": 1,
     "pendingReview": false
+  },
+  "statusline": {
+    "passed": 1,
+    "total": 1,
+    "pendingReview": false
+  },
+  "opener": {
+    "passed": 1,
+    "total": 1,
+    "pendingReview": false
+  },
+  "live-server": {
+    "passed": 3,
+    "total": 3,
+    "pendingReview": true
   },
   "pmdir": {
     "passed": 1,
@@ -125,6 +165,11 @@
     "pendingReview": false
   },
   "agent-platform": {
+    "passed": 1,
+    "total": 1,
+    "pendingReview": false
+  },
+  "git-tool": {
     "passed": 1,
     "total": 1,
     "pendingReview": false
@@ -153,50 +198,5 @@
     "passed": 1,
     "total": 1,
     "pendingReview": false
-  },
-  "f-history": {
-    "passed": 2,
-    "total": 2,
-    "pendingReview": true
-  },
-  "history-gen": {
-    "passed": 2,
-    "total": 2,
-    "pendingReview": true
-  },
-  "git-tool": {
-    "passed": 1,
-    "total": 1,
-    "pendingReview": true
-  },
-  "f-statusline": {
-    "passed": 1,
-    "total": 1,
-    "pendingReview": true
-  },
-  "f-live-map": {
-    "passed": 2,
-    "total": 2,
-    "pendingReview": true
-  },
-  "statusline": {
-    "passed": 1,
-    "total": 1,
-    "pendingReview": true
-  },
-  "live-server": {
-    "passed": 2,
-    "total": 2,
-    "pendingReview": true
-  },
-  "f-open": {
-    "passed": 1,
-    "total": 1,
-    "pendingReview": true
-  },
-  "opener": {
-    "passed": 1,
-    "total": 1,
-    "pendingReview": true
   }
 }
